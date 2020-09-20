@@ -36,8 +36,8 @@
 				</ul>
 			</nav>
 			<p>
-				Elixir is awesome. And it has a vast awesome list: <a href="https://github.com/h4cc/awesome-elixir">h4cc/awesome-elixir</a>.
-				This is a mirror of it where each library is marked with number of stars at <a href="https://github.com">Github</a> and number of days since the last commit.
+				Elixir is awesome. And it has a vast awesome list: <a href="https://github.com/h4cc/awesome-elixir" target="_blank">h4cc/awesome-elixir</a>.<br>
+				This is a mirror of it where each library is marked with number of stars at <a href="https://github.com" target="_blank">Github</a> and number of days since the last commit.
 			</p>
 		</header>
 		<main>
