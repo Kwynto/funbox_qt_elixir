@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>FunBox QT Elixir - Awesome Elixir</title>
+		<link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/awsm.min.css")%>"/>
+		<link href="https://fonts.googleapis.com/css?family=PT+Sans|PT+Serif:400,400i,700,700i&subset=cyrillic" rel="stylesheet">
+	</head>
+	<body>
+		<header>
+			<h5>Elixir qualification task for FunBox</h5>
+			<h6>Завизион Константин</h6><br>
+			<h1>Awesome Elixir</h1>
+			<nav>
+				<ul>
+					<li>
+						<a href="/">All</a>
+					</li>
+						<li>
+							<a href="/?min_stars=10">&ge;10⭐</a>
+						</li>
+						<li>
+							<a href="/?min_stars=50">&ge;50⭐</a>
+						</li>
+						<li>
+							<a href="/?min_stars=100">&ge;100⭐</a>
+						</li>
+						<li>
+							<a href="/?min_stars=500">&ge;500⭐</a>
+						</li>
+						<li>
+							<a href="/?min_stars=1000">&ge;1000🌟</a>
+						</li>
+				</ul>
+			</nav>
+			<p>
+				Elixir is awesome. And it has a vast awesome list: <a href="https://github.com/h4cc/awesome-elixir">h4cc/awesome-elixir</a>.
+				This is a mirror of it where each library is marked with number of stars at <a href="https://github.com">Github</a> and number of days since the last commit.
+			</p>
+		</header>
+		<main>
+			<p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+			<%= @inner_content %>
+		</main>
+		<footer>
+			Constantine Zavezeon &copy; 2020
+			<br>
+			<div class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></div>
+		</footer>
+	</body>
+</html>
