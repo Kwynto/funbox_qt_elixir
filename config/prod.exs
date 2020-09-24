@@ -10,22 +10,22 @@ use Mix.Config
 # which you should run after static files are built and
 # before starting your production server.
 config :funbox_qt_elixir, FunboxQtElixirWeb.Endpoint,
-	url: [host: "example.com", port: 80],
-	cache_static_manifest: "priv/static/cache_manifest.json"
+  url: [host: "example.com", port: 80],
+  cache_static_manifest: "priv/static/cache_manifest.json"
 
 # Do not print debug messages in production
 config :logger, level: :info
 
 config :funbox_qt_elixir, :children, [
-		# Start the Telemetry supervisor
-		FunboxQtElixirWeb.Telemetry,
-		# Start the PubSub system
-		{Phoenix.PubSub, name: FunboxQtElixir.PubSub},
-		# Start the Endpoint (http/https)
-		FunboxQtElixirWeb.Endpoint,
-		# FunboxQtElixir.AwesomeServer for state of awesome-list
-		FunboxQtElixir.AwesomeServer
-	]
+  # Start the Telemetry supervisor
+  FunboxQtElixirWeb.Telemetry,
+  # Start the PubSub system
+  {Phoenix.PubSub, name: FunboxQtElixir.PubSub},
+  # Start the Endpoint (http/https)
+  FunboxQtElixirWeb.Endpoint,
+  # FunboxQtElixir.AwesomeServer for state of awesome-list
+  FunboxQtElixir.AwesomeServer
+]
 
 # ## SSL Support
 #

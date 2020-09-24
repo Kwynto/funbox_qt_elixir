@@ -6,7 +6,8 @@ defmodule FunboxQtElixir.Application do
   use Application
 
   def start(_type, _args) do
-    children = :funbox_qt_elixir |> Application.get_env(:children) # See children in configuration files
+    # See children in configuration files
+    children = :funbox_qt_elixir |> Application.get_env(:children)
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options

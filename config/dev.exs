@@ -7,11 +7,11 @@ use Mix.Config
 # watchers to your application. For example, we use it
 # with webpack to recompile .js and .css sources.
 config :funbox_qt_elixir, FunboxQtElixirWeb.Endpoint,
-	http: [port: 4000],
-	debug_errors: true,
-	code_reloader: true,
-	check_origin: false,
-	watchers: []
+  http: [port: 4000],
+  debug_errors: true,
+  code_reloader: true,
+  check_origin: false,
+  watchers: []
 
 # ## SSL Support
 #
@@ -39,25 +39,25 @@ config :funbox_qt_elixir, FunboxQtElixirWeb.Endpoint,
 
 # Watch static and templates for browser reloading.
 config :funbox_qt_elixir, FunboxQtElixirWeb.Endpoint,
-	live_reload: [
-		patterns: [
-			~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
-			~r"priv/gettext/.*(po)$",
-			~r"lib/funbox_qt_elixir_web/(live|views)/.*(ex)$",
-			~r"lib/funbox_qt_elixir_web/templates/.*(eex)$"
-		]
-	]
+  live_reload: [
+    patterns: [
+      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
+      ~r"priv/gettext/.*(po)$",
+      ~r"lib/funbox_qt_elixir_web/(live|views)/.*(ex)$",
+      ~r"lib/funbox_qt_elixir_web/templates/.*(eex)$"
+    ]
+  ]
 
 config :funbox_qt_elixir, :children, [
-		# Start the Telemetry supervisor
-		FunboxQtElixirWeb.Telemetry,
-		# Start the PubSub system
-		{Phoenix.PubSub, name: FunboxQtElixir.PubSub},
-		# Start the Endpoint (http/https)
-		FunboxQtElixirWeb.Endpoint,
-		# FunboxQtElixir.AwesomeServer for state of awesome-list
-		FunboxQtElixir.AwesomeServer
-	]
+  # Start the Telemetry supervisor
+  FunboxQtElixirWeb.Telemetry,
+  # Start the PubSub system
+  {Phoenix.PubSub, name: FunboxQtElixir.PubSub},
+  # Start the Endpoint (http/https)
+  FunboxQtElixirWeb.Endpoint,
+  # FunboxQtElixir.AwesomeServer for state of awesome-list
+  FunboxQtElixir.AwesomeServer
+]
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
