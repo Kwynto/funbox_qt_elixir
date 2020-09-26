@@ -18,13 +18,13 @@ defmodule FunboxQtElixir.AwesomeTest do
 
   test "Parse description without links" do
     description = " Any description"
-    result = FunboxQtElixir.Awesome.parse_description(description)
+    result = FunboxQtElixir.Awesome.parseDescription(description)
     assert result == description
   end
 
   test "Parse description with links" do
     description = " Begin description [somelink](http://localhost/) end description."
-    result = FunboxQtElixir.Awesome.parse_description(description)
+    result = FunboxQtElixir.Awesome.parseDescription(description)
 
     assert result ==
              {:description, " Begin description ", "http://localhost/", "somelink",
@@ -33,22 +33,22 @@ defmodule FunboxQtElixir.AwesomeTest do
 
   test "Description has not links 1" do
     description = " Any description"
-    assert FunboxQtElixir.Awesome.parse_description?(description) == false
+    assert FunboxQtElixir.Awesome.parseDescription?(description) == false
   end
 
   test "Description has not links 2" do
     description = " Any description"
-    refute FunboxQtElixir.Awesome.parse_description?(description) == true
+    refute FunboxQtElixir.Awesome.parseDescription?(description) == true
   end
 
   test "Description has links 1" do
     description = " Begin description [somelink](http://localhost/) end description."
-    assert FunboxQtElixir.Awesome.parse_description?(description) == true
+    assert FunboxQtElixir.Awesome.parseDescription?(description) == true
   end
 
   test "Description has links 2" do
     description = " Begin description [somelink](http://localhost/) end description."
-    refute FunboxQtElixir.Awesome.parse_description?(description) == false
+    refute FunboxQtElixir.Awesome.parseDescription?(description) == false
   end
 
   test "Parse data from GitHub API" do
@@ -56,7 +56,7 @@ defmodule FunboxQtElixir.AwesomeTest do
       "status" => "loaded",
       "categories" => [],
       "resources" => [],
-      "allpacks" => [
+      "all_packs" => [
         %{
           :name => "fsm",
           :link => "https://github.com/sasa1977/fsm",
@@ -68,16 +68,16 @@ defmodule FunboxQtElixir.AwesomeTest do
       ]
     }
 
-    result = FunboxQtElixir.Awesome.parse_GitHub_data(data)
+    result = FunboxQtElixir.Awesome.parseGitHubData(data)
 
     %{
       "status" => status,
       "categories" => _categories,
       "resources" => _resources,
-      "allpacks" => allPacks
+      "all_packs" => all_packs
     } = result
 
-    [%{:stars => stars, :lastupdate => lu}] = allPacks
+    [%{:stars => stars, :lastupdate => lu}] = all_packs
 
     assert status == "checked"
     refute status == "loaded"
@@ -101,7 +101,7 @@ defmodule FunboxQtElixir.AwesomeTest do
       }
     ]
 
-    allpacks = [
+    all_packs = [
       %{
         :name => "fsm",
         :link => "https://github.com/sasa1977/fsm",
@@ -112,7 +112,7 @@ defmodule FunboxQtElixir.AwesomeTest do
       }
     ]
 
-    result = FunboxQtElixir.Awesome.check_for_matches(categories, allpacks)
+    result = FunboxQtElixir.Awesome.checkForMatches(categories, all_packs)
 
     assert result == [
              %{

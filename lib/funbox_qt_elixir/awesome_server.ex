@@ -20,12 +20,12 @@ defmodule FunboxQtElixir.AwesomeServer do
   @doc """
   	Получение пакетов и категорий по количеству звезд
   """
-  def get_awesome_list(min_stars) do
+  def getAwesomeList(min_stars) do
     [{:status, status}] = ETS.match_object(:state, {:status, :_})
     categories = ETS.match_object(:categories, {:_, :_, :_})
 
-    allpacks =
-      ETS.select(:allpacks, [
+    all_packs =
+      ETS.select(:all_packs, [
         {{:"$1", :"$2", :"$3", :"$4", :"$5", :"$6"}, [{:>=, :"$5", {:const, min_stars}}],
          [{{:"$1", :"$2", :"$3", :"$4", :"$5", :"$6"}}]}
       ])
@@ -36,8 +36,8 @@ defmodule FunboxQtElixir.AwesomeServer do
         %{:title => title, :link => link, :description => description}
       end
 
-    allpacks =
-      for item <- allpacks do
+    all_packs =
+      for item <- all_packs do
         {name, link, description, heading, stars, lastupdate} = item
 
         %{
@@ -51,18 +51,18 @@ defmodule FunboxQtElixir.AwesomeServer do
       end
 
     categories = Enum.sort_by(categories, & &1.title, :asc)
-    allpacks = Enum.sort_by(allpacks, & &1.name, :asc)
-    categories = FunboxQtElixir.Awesome.check_for_matches(categories, allpacks)
-    %{"status" => status, "categories" => categories, "resources" => [], "allpacks" => allpacks}
+    all_packs = Enum.sort_by(all_packs, & &1.name, :asc)
+    categories = FunboxQtElixir.Awesome.checkForMatches(categories, all_packs)
+    %{"status" => status, "categories" => categories, "resources" => [], "all_packs" => all_packs}
   end
 
   # Загрузка, обработка и обновление состояния
-  defp cast_update_awesome_list() do
+  defp castUpdateAwesomeList() do
     GenServer.cast(__MODULE__, {:update_awesome_list, []})
   end
 
   # Обновить звезды и даты
-  defp cast_update_status_links() do
+  defp castUpdateStatusLinks() do
     GenServer.cast(__MODULE__, :update_status_links)
   end
 
@@ -79,9 +79,9 @@ defmodule FunboxQtElixir.AwesomeServer do
     ETS.new(:state, [:set, :protected, :named_table])
     ETS.insert(:state, {:status, "inited"})
     ETS.new(:categories, [:set, :protected, :named_table])
-    ETS.new(:allpacks, [:set, :protected, :named_table])
+    ETS.new(:all_packs, [:set, :protected, :named_table])
     # загрузка и парсинг awesome-list
-    cast_update_awesome_list()
+    castUpdateAwesomeList()
     init_state = %{"status" => "inited"}
     {:ok, init_state}
   end
@@ -90,12 +90,12 @@ defmodule FunboxQtElixir.AwesomeServer do
   	Загрузка списка пакетов и парсинг во внутренний формат
   """
   def handle_cast({:update_awesome_list, _value}, _state) do
-    mapResult = FunboxQtElixir.Awesome.runParse()
-    %{"status" => status, "categories" => categories, "allpacks" => allpacks} = mapResult
+    map_result = FunboxQtElixir.Awesome.runParse()
+    %{"status" => status, "categories" => categories, "all_packs" => all_packs} = map_result
     ETS.delete(:categories)
-    ETS.delete(:allpacks)
+    ETS.delete(:all_packs)
     ETS.new(:categories, [:set, :protected, :named_table])
-    ETS.new(:allpacks, [:set, :protected, :named_table])
+    ETS.new(:all_packs, [:set, :protected, :named_table])
 
     qry =
       for category <- categories do
@@ -105,15 +105,15 @@ defmodule FunboxQtElixir.AwesomeServer do
     ETS.insert(:categories, qry)
 
     qry =
-      for pack <- allpacks do
+      for pack <- all_packs do
         {pack.name, pack.link, pack.description, pack.heading, pack.stars, pack.lastupdate}
       end
 
-    ETS.insert(:allpacks, qry)
+    ETS.insert(:all_packs, qry)
     ETS.insert(:state, {:status, status})
     IO.puts("Awesome-List loaded.")
     state = %{"status" => status}
-    cast_update_status_links()
+    castUpdateStatusLinks()
     {:noreply, state}
   end
 
@@ -121,24 +121,24 @@ defmodule FunboxQtElixir.AwesomeServer do
   	Парсинг звезд и даты апдейта
   """
   def handle_cast(:update_status_links, state) do
-    mapResult = FunboxQtElixir.Awesome.runParse()
-    %{"status" => status} = mapResult
+    map_result = FunboxQtElixir.Awesome.runParse()
+    %{"status" => status} = map_result
 
     state =
       if status == "loaded" do
         IO.puts("The update has begun ...")
-        resultUpdate = FunboxQtElixir.Awesome.parse_GitHub_data(mapResult)
+        result_update = FunboxQtElixir.Awesome.parseGitHubData(map_result)
         ETS.delete(:categories)
-        ETS.delete(:allpacks)
+        ETS.delete(:all_packs)
         ETS.new(:categories, [:set, :protected, :named_table])
-        ETS.new(:allpacks, [:set, :protected, :named_table])
+        ETS.new(:all_packs, [:set, :protected, :named_table])
 
         %{
           "status" => status,
           "categories" => categories,
           "resources" => _resources,
-          "allpacks" => allpacks
-        } = resultUpdate
+          "all_packs" => all_packs
+        } = result_update
 
         qry =
           for category <- categories do
@@ -148,11 +148,11 @@ defmodule FunboxQtElixir.AwesomeServer do
         ETS.insert(:categories, qry)
 
         qry =
-          for pack <- allpacks do
+          for pack <- all_packs do
             {pack.name, pack.link, pack.description, pack.heading, pack.stars, pack.lastupdate}
           end
 
-        ETS.insert(:allpacks, qry)
+        ETS.insert(:all_packs, qry)
         ETS.insert(:state, {:status, status})
         IO.puts("The update has finished!")
         # state = 
@@ -161,7 +161,7 @@ defmodule FunboxQtElixir.AwesomeServer do
         state
       end
 
-    schedule_work1()
+    scheduleWork1()
     {:noreply, state}
   end
 
@@ -170,12 +170,12 @@ defmodule FunboxQtElixir.AwesomeServer do
   """
   def handle_info(:timercast1, state) do
     IO.puts("Daily update.")
-    cast_update_status_links()
+    castUpdateStatusLinks()
     {:noreply, state}
   end
 
   # Таймер на сутки
-  defp schedule_work1() do
+  defp scheduleWork1() do
     Process.send_after(self(), :timercast1, 86_400_000)
 
     # Process.send_after(self(), :timercast1, 300_000) # тестовое значение (5 минут)

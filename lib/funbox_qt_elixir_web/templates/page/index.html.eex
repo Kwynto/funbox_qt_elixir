@@ -9,20 +9,20 @@
 	<h2><a name="<%= category.link %>"></a><%= category.title %></h2>
 	<p><%= category.description %></p>
 	<ul>
-		<%= for pack <- @allpacks do %>
+		<%= for pack <- @all_packs do %>
 			<%= if pack.heading == category.title do %>
 				<%= if pack.lastupdate > 365 do %>
 				<li class="outdated">
 				<% else %>
 				<li>
 				<% end %>
-					<%= if FunboxQtElixir.Awesome.parse_description?(pack.description) do %>
-						<% {:description, beginStr, link, name, endStr} = FunboxQtElixir.Awesome.parse_description(pack.description) %>
-							<%= if FunboxQtElixir.Awesome.parse_description?(beginStr) do %>
-								<% {:description, beginStr2, link2, name2, endStr2} = FunboxQtElixir.Awesome.parse_description(beginStr) %>
-								<a href="<%= pack.link %>" target="_blank"><%= pack.name %></a> ⭐<sub><%= pack.stars %></sub> 📅<sub><%= pack.lastupdate %></sub> — <span><%= beginStr2 %><a href="<%= link2 %>" target="_blank"><%= name2 %></a><%= endStr2 %> <a href="<%= link %>" target="_blank"><%= name %></a><%= endStr %></span>
+					<%= if FunboxQtElixir.Awesome.parseDescription?(pack.description) do %>
+						<% {:description, begin_str, link, name, end_str} = FunboxQtElixir.Awesome.parseDescription(pack.description) %>
+							<%= if FunboxQtElixir.Awesome.parseDescription?(begin_str) do %>
+								<% {:description, begin_str2, link2, name2, end_str2} = FunboxQtElixir.Awesome.parseDescription(begin_str) %>
+								<a href="<%= pack.link %>" target="_blank"><%= pack.name %></a> ⭐<sub><%= pack.stars %></sub> 📅<sub><%= pack.lastupdate %></sub> — <span><%= begin_str2 %><a href="<%= link2 %>" target="_blank"><%= name2 %></a><%= end_str2 %> <a href="<%= link %>" target="_blank"><%= name %></a><%= end_str %></span>
 							<% else %>
-								<a href="<%= pack.link %>" target="_blank"><%= pack.name %></a> ⭐<sub><%= pack.stars %></sub> 📅<sub><%= pack.lastupdate %></sub> — <span><%= beginStr %><a href="<%= link %>" target="_blank"><%= name %></a><%= endStr %></span>
+								<a href="<%= pack.link %>" target="_blank"><%= pack.name %></a> ⭐<sub><%= pack.stars %></sub> 📅<sub><%= pack.lastupdate %></sub> — <span><%= begin_str %><a href="<%= link %>" target="_blank"><%= name %></a><%= end_str %></span>
 							<% end %>
 					<% else %>
 						<a href="<%= pack.link %>" target="_blank"><%= pack.name %></a> ⭐<sub><%= pack.stars %></sub> 📅<sub><%= pack.lastupdate %></sub> — <span><%= pack.description %></span>

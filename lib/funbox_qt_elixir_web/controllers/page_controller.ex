@@ -13,14 +13,14 @@ defmodule FunboxQtElixirWeb.PageController do
         _e -> 0
       end
 
-    fullData =
+    full_data =
       try do
-        State.get_awesome_list(min_stars)
+        State.getAwesomeList(min_stars)
       rescue
-        _e -> %{"status" => "inited", "categories" => [], "allpacks" => []}
+        _e -> %{"status" => "inited", "categories" => [], "all_packs" => []}
       end
 
-    %{"status" => status, "categories" => categories, "allpacks" => allPacks} = fullData
+    %{"status" => status, "categories" => categories, "all_packs" => all_packs} = full_data
 
     conn =
       if status == "inited" or status == "loaded" do
@@ -33,6 +33,6 @@ defmodule FunboxQtElixirWeb.PageController do
         conn
       end
 
-    render(conn, "index.html", categories: categories, allpacks: allPacks)
+    render(conn, "index.html", categories: categories, all_packs: all_packs)
   end
 end
