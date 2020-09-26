@@ -4,6 +4,7 @@ defmodule FunboxQtElixir.AwesomeServer do
   """
   use GenServer
 
+  require Logger
   alias :dets, as: Storage, warn: false
 
   #######################
@@ -69,7 +70,7 @@ defmodule FunboxQtElixir.AwesomeServer do
   	Initialization function
   """
   def init(_init_state) do
-    IO.puts("AwesomeServer started.")
+    Logger.info("AwesomeServer started.")
     # стартовые состояния
     Storage.open_file(:state, type: :set)
     Storage.insert(:state, {:status, "inited"})
@@ -90,7 +91,7 @@ defmodule FunboxQtElixir.AwesomeServer do
 
     state =
       if status == "loaded" do
-        IO.puts("The update has begun ...")
+        Logger.info("The update has begun ...")
         result_update = FunboxQtElixir.Awesome.questionGitHubData(map_result)
         Storage.delete_all_objects(:categories)
         Storage.delete_all_objects(:all_packs)
@@ -118,7 +119,7 @@ defmodule FunboxQtElixir.AwesomeServer do
 
         Storage.insert(:all_packs, qry)
         Storage.insert(:state, {:status, status})
-        IO.puts("The update has finished!")
+        Logger.info("The update has finished!")
         # state = 
         %{"status" => status}
       else
@@ -130,10 +131,21 @@ defmodule FunboxQtElixir.AwesomeServer do
   end
 
   @doc """
+  	Закрытие сервера
+  """
+  def terminate(_reason, _state) do
+    # Do Shutdown Stuff
+    Storage.close(:state)
+    Storage.close(:categories)
+    Storage.close(:all_packs)
+    :normal
+  end
+
+  @doc """
   	Ежедневное обновления всего листа и состояния пакетов
   """
   def handle_info(:timercast1, state) do
-    IO.puts("Daily update.")
+    Logger.info("Daily update.")
     castUpdateStatusLinks()
     {:noreply, state}
   end

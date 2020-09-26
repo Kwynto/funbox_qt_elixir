@@ -5,6 +5,8 @@ defmodule FunboxQtElixir.Awesome do
   	и формирование стейта для использования в GenServer.
   """
 
+  require Logger
+
   @doc """
   	Точка входа.
   	Загрузка awesom-list в формате MD, парсинг в удобный внутренний формат 
@@ -337,8 +339,7 @@ defmodule FunboxQtElixir.Awesome do
                   86400
                 )
 
-              IO.write("Package information updated: ")
-              IO.inspect(one_link)
+              Logger.info("Package information updated: #{inspect(one_link)}")
               one_res = %{head | stars: resp_stars, lastupdate: days_passed}
               {:res_state, res_status, res_packs} = acc
               res_packs = res_packs ++ [one_res]
