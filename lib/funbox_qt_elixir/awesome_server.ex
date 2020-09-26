@@ -1,31 +1,24 @@
 defmodule FunboxQtElixir.AwesomeServer do
   @moduledoc """
-  	Хранение состояния об awesome-list в ETS и предоставление информации о нем сайту.
+  	Хранение состояния об awesome-list в DETS и предоставление информации о нем сайту.
   """
   use GenServer
 
-  alias :ets, as: ETS, warn: false
+  alias :dets, as: Storage, warn: false
 
   #######################
   # Client's functions
   #######################
 
   @doc """
-  	Start function for supervisor
-  """
-  def start_link(_opts) do
-    GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
-  end
-
-  @doc """
   	Получение пакетов и категорий по количеству звезд
   """
   def getAwesomeList(min_stars) do
-    [{:status, status}] = ETS.match_object(:state, {:status, :_})
-    categories = ETS.match_object(:categories, {:_, :_, :_})
+    [{:status, status}] = Storage.match_object(:state, {:status, :_})
+    categories = Storage.match_object(:categories, {:_, :_, :_})
 
     all_packs =
-      ETS.select(:all_packs, [
+      Storage.select(:all_packs, [
         {{:"$1", :"$2", :"$3", :"$4", :"$5", :"$6"}, [{:>=, :"$5", {:const, min_stars}}],
          [{{:"$1", :"$2", :"$3", :"$4", :"$5", :"$6"}}]}
       ])
@@ -56,11 +49,6 @@ defmodule FunboxQtElixir.AwesomeServer do
     %{"status" => status, "categories" => categories, "resources" => [], "all_packs" => all_packs}
   end
 
-  # Загрузка, обработка и обновление состояния
-  defp castUpdateAwesomeList() do
-    GenServer.cast(__MODULE__, {:update_awesome_list, []})
-  end
-
   # Обновить звезды и даты
   defp castUpdateStatusLinks() do
     GenServer.cast(__MODULE__, :update_status_links)
@@ -71,54 +59,30 @@ defmodule FunboxQtElixir.AwesomeServer do
   #######################
 
   @doc """
+  	Start function for supervisor
+  """
+  def start_link(_opts) do
+    GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
+  end
+
+  @doc """
   	Initialization function
   """
   def init(_init_state) do
     IO.puts("AwesomeServer started.")
     # стартовые состояния
-    ETS.new(:state, [:set, :protected, :named_table])
-    ETS.insert(:state, {:status, "inited"})
-    ETS.new(:categories, [:set, :protected, :named_table])
-    ETS.new(:all_packs, [:set, :protected, :named_table])
+    Storage.open_file(:state, type: :set)
+    Storage.insert(:state, {:status, "inited"})
+    Storage.open_file(:categories, type: :set)
+    Storage.open_file(:all_packs, type: :set)
     # загрузка и парсинг awesome-list
-    castUpdateAwesomeList()
+    castUpdateStatusLinks()
     init_state = %{"status" => "inited"}
     {:ok, init_state}
   end
 
   @doc """
-  	Загрузка списка пакетов и парсинг во внутренний формат
-  """
-  def handle_cast({:update_awesome_list, _value}, _state) do
-    map_result = FunboxQtElixir.Awesome.runParse()
-    %{"status" => status, "categories" => categories, "all_packs" => all_packs} = map_result
-    ETS.delete(:categories)
-    ETS.delete(:all_packs)
-    ETS.new(:categories, [:set, :protected, :named_table])
-    ETS.new(:all_packs, [:set, :protected, :named_table])
-
-    qry =
-      for category <- categories do
-        {category.title, category.link, category.description}
-      end
-
-    ETS.insert(:categories, qry)
-
-    qry =
-      for pack <- all_packs do
-        {pack.name, pack.link, pack.description, pack.heading, pack.stars, pack.lastupdate}
-      end
-
-    ETS.insert(:all_packs, qry)
-    ETS.insert(:state, {:status, status})
-    IO.puts("Awesome-List loaded.")
-    state = %{"status" => status}
-    castUpdateStatusLinks()
-    {:noreply, state}
-  end
-
-  @doc """
-  	Парсинг звезд и даты апдейта
+  	Парсинг списка и опрос GitHub на количество звезд и даты апдейта
   """
   def handle_cast(:update_status_links, state) do
     map_result = FunboxQtElixir.Awesome.runParse()
@@ -127,11 +91,11 @@ defmodule FunboxQtElixir.AwesomeServer do
     state =
       if status == "loaded" do
         IO.puts("The update has begun ...")
-        result_update = FunboxQtElixir.Awesome.parseGitHubData(map_result)
-        ETS.delete(:categories)
-        ETS.delete(:all_packs)
-        ETS.new(:categories, [:set, :protected, :named_table])
-        ETS.new(:all_packs, [:set, :protected, :named_table])
+        result_update = FunboxQtElixir.Awesome.questionGitHubData(map_result)
+        Storage.delete_all_objects(:categories)
+        Storage.delete_all_objects(:all_packs)
+        Storage.open_file(:categories, type: :set)
+        Storage.open_file(:all_packs, type: :set)
 
         %{
           "status" => status,
@@ -145,15 +109,15 @@ defmodule FunboxQtElixir.AwesomeServer do
             {category.title, category.link, category.description}
           end
 
-        ETS.insert(:categories, qry)
+        Storage.insert(:categories, qry)
 
         qry =
           for pack <- all_packs do
             {pack.name, pack.link, pack.description, pack.heading, pack.stars, pack.lastupdate}
           end
 
-        ETS.insert(:all_packs, qry)
-        ETS.insert(:state, {:status, status})
+        Storage.insert(:all_packs, qry)
+        Storage.insert(:state, {:status, status})
         IO.puts("The update has finished!")
         # state = 
         %{"status" => status}

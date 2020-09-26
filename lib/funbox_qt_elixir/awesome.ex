@@ -106,7 +106,7 @@ defmodule FunboxQtElixir.Awesome do
   	Парсим строку описания на наличие дополнительной ссылки на технологию (через регулярное выражение)
   	Используется в шаблоне.
   """
-  def parseDescription(description) do
+  def divisionDescription(description) do
     case Regex.run(@description_regex, description) do
       # доп. ссылки нет -> вставляем описание как было
       nil ->
@@ -121,7 +121,7 @@ defmodule FunboxQtElixir.Awesome do
   	Проверяет содержится ли внутри описания ссылка (true or false)
   	Используется в шаблоне.
   """
-  def parseDescription?(description) do
+  def divisionDescription?(description) do
     case Regex.run(@description_regex, description) do
       nil -> false
       [^description, _begin_str, _name, _link, _end_str] -> true
@@ -252,9 +252,9 @@ defmodule FunboxQtElixir.Awesome do
   end
 
   @doc """
-  	Парсинг пакетов на GitHub
+  	Опрос GitHub API для получения количества звезд у пакетов и даты последнего обновления
   """
-  def parseGitHubData(data) do
+  def questionGitHubData(data) do
     %{
       "status" => status,
       "categories" => categories,
@@ -262,8 +262,8 @@ defmodule FunboxQtElixir.Awesome do
       "all_packs" => all_packs
     } = data
 
-    result_parse = parseStatus(all_packs, {:res_state, status, []})
-    {:res_state, res_status, res_packs} = result_parse
+    result_question = questionStatus(all_packs, {:res_state, status, []})
+    {:res_state, res_status, res_packs} = result_question
     # Формируем полный стейт
     %{
       "status" => res_status,
@@ -273,14 +273,14 @@ defmodule FunboxQtElixir.Awesome do
     }
   end
 
-  # Клауз закрытия для парсинга GitHub
-  defp parseStatus([], acc) do
+  # Клауз закрытия для опроса GitHub
+  defp questionStatus([], acc) do
     {:res_state, _res_status, res_packs} = acc
     {:res_state, "checked", res_packs}
   end
 
-  # Основной рабочий клауз для парсинга GitHub
-  defp parseStatus([head | tail], acc) do
+  # Основной рабочий клауз для опроса GitHub
+  defp questionStatus([head | tail], acc) do
     try do
       %{link: one_link, stars: one_stars, lastupdate: one_lu} = head
 
@@ -353,15 +353,15 @@ defmodule FunboxQtElixir.Awesome do
           end
 
         # Отработало подключение идем дальше по пакетам
-        parseStatus(tail, acc2)
+        questionStatus(tail, acc2)
       else
         {:res_state, res_status, res_packs} = acc
         res_packs = res_packs ++ [head]
         acc2 = {:res_state, res_status, res_packs}
-        parseStatus(tail, acc2)
+        questionStatus(tail, acc2)
       end
     rescue
-      _e -> parseStatus(tail, acc)
+      _e -> questionStatus(tail, acc)
     end
   end
 
@@ -389,7 +389,8 @@ defmodule FunboxQtElixir.Awesome do
 
   @doc """
   	Проверка совпадений спаска категорий со списком найденных пакетов
-  	и возврат актуального списка categories
+  	и возврат актуального списка categories.
+    Используется для выборки из хранилища при отображении страницы, для парсинга НЕ используется.
   """
   def checkForMatches(categories, all_packs) do
     list_heading =

@@ -18,13 +18,13 @@ defmodule FunboxQtElixir.AwesomeTest do
 
   test "Parse description without links" do
     description = " Any description"
-    result = FunboxQtElixir.Awesome.parseDescription(description)
+    result = FunboxQtElixir.Awesome.divisionDescription(description)
     assert result == description
   end
 
   test "Parse description with links" do
     description = " Begin description [somelink](http://localhost/) end description."
-    result = FunboxQtElixir.Awesome.parseDescription(description)
+    result = FunboxQtElixir.Awesome.divisionDescription(description)
 
     assert result ==
              {:description, " Begin description ", "http://localhost/", "somelink",
@@ -33,22 +33,22 @@ defmodule FunboxQtElixir.AwesomeTest do
 
   test "Description has not links 1" do
     description = " Any description"
-    assert FunboxQtElixir.Awesome.parseDescription?(description) == false
+    assert FunboxQtElixir.Awesome.divisionDescription?(description) == false
   end
 
   test "Description has not links 2" do
     description = " Any description"
-    refute FunboxQtElixir.Awesome.parseDescription?(description) == true
+    refute FunboxQtElixir.Awesome.divisionDescription?(description) == true
   end
 
   test "Description has links 1" do
     description = " Begin description [somelink](http://localhost/) end description."
-    assert FunboxQtElixir.Awesome.parseDescription?(description) == true
+    assert FunboxQtElixir.Awesome.divisionDescription?(description) == true
   end
 
   test "Description has links 2" do
     description = " Begin description [somelink](http://localhost/) end description."
-    refute FunboxQtElixir.Awesome.parseDescription?(description) == false
+    refute FunboxQtElixir.Awesome.divisionDescription?(description) == false
   end
 
   test "Parse data from GitHub API" do
@@ -68,7 +68,7 @@ defmodule FunboxQtElixir.AwesomeTest do
       ]
     }
 
-    result = FunboxQtElixir.Awesome.parseGitHubData(data)
+    result = FunboxQtElixir.Awesome.questionGitHubData(data)
 
     %{
       "status" => status,
