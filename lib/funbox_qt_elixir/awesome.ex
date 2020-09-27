@@ -254,6 +254,103 @@ defmodule FunboxQtElixir.Awesome do
   end
 
   @doc """
+    Опрос GitHub API для получения у конкретного пакета количества звезд и даты последнего обновления
+  """
+  def questionOneGitHubData(pack) do
+    try do
+      %{link: one_link, stars: one_stars, lastupdate: one_lu} = pack
+
+      if one_stars == 0 and one_lu == 0 do
+        # формируем запрос к GitHub
+        one_link_repos =
+          String.replace(
+            one_link,
+            "https://github.com/",
+            "https://fb-qt-elixir:Fmk9h0mda@api.github.com/repos/",
+            global: false
+          )
+
+        %HTTPoison.Response{body: lines} = HTTPoison.get!(one_link_repos)
+        {status, response_gha} = Jason.decode(lines)
+
+        if status == :ok do
+          # GitHub ответил, обрабатываем результат
+          {resp_updated, resp_stars, stat_active} =
+            case response_gha do
+              %{"commits_url" => resp_commits_url, "stargazers_count" => resp_stars} ->
+                # корректный ответ запрашивем дату последнего обновления из коммитов
+                # и возвращаем кортеж {дата, звезды, признак_удачного_завершения}
+                {getCommitUpdated(resp_commits_url), resp_stars, 1}
+
+              %{"documentation_url" => _doc_url_GH, "message" => _mes_gh, "url" => url_gh} ->
+                # некорректный ответ, репозиторий перемещен или переименован
+                # получаем актуальный адрес из сообщения и опять проверяем как это было выше
+                one_link_repos =
+                  String.replace(
+                    url_gh,
+                    "https://api.github.com/",
+                    "https://fb-qt-elixir:Fmk9h0mda@api.github.com/",
+                    global: false
+                  )
+
+                %HTTPoison.Response{body: lines} = HTTPoison.get!(one_link_repos)
+                {_status, response_gha} = Jason.decode(lines)
+
+                %{"commits_url" => resp_commits_url, "stargazers_count" => resp_stars} =
+                  response_gha
+
+                # возвращаем кортеж {дата, звезды, признак_удачного_завершения}
+                {getCommitUpdated(resp_commits_url), resp_stars, 1}
+
+              %{"documentation_url" => _doc_url_gh, "message" => _mes_gh} ->
+                # GitHub сообщил о невозможности проверить несуществующий репозиторий
+                # возможно он удален
+                # формируем кортеж по общей схеме, последний элемент показывает провал проверки
+                {0, 0, 0}
+
+              _ ->
+                # общее правило для всех прочих ответов отличных от корректных
+                # формируем кортеж по общей схеме, последний элемент показывает провал проверки
+                {0, 0, 0}
+            end
+
+          # если проверка прошла успешно (stat_active последний элемент кортежа результата проверки),
+          # то формируем ответ
+          if stat_active != 0 do
+            # получаем текущую дату и время
+            {:ok, resp_updated_dt, 0} = DateTime.from_iso8601(resp_updated)
+
+            # вычисляем количество дней, прошедших с последнего обновленя
+            days_passed =
+              div(
+                DateTime.to_unix(DateTime.now!("Etc/UTC")) -
+                  DateTime.to_unix(resp_updated_dt),
+                86400
+              )
+
+            Logger.info("Package information updated: #{inspect(one_link)}")
+
+            # обновляем мапу и возвращаем ее в качестве результата всей проверки
+            %{pack | stars: resp_stars, lastupdate: days_passed}
+          else
+            # Непроверяемый пакет возвращаем nil
+            nil
+          end
+        else
+          # ссылка вела не на GitHub
+          # Непроверяемый пакет возвращаем nil
+          nil
+        end
+      else
+        # пакет не требует проверки, возвращаем его обратно
+        pack
+      end
+    rescue
+      _e -> nil
+    end
+  end
+
+  @doc """
   	Опрос GitHub API для получения количества звезд у пакетов и даты последнего обновления
   """
   def questionGitHubData(data) do
