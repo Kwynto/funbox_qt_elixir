@@ -1,6 +1,6 @@
 # FunBoxQTElixir - Выполненное квалификационное задание на должность Elixir-разработчик в FunBox
 
-Для запуска проекта FunBoxQTElixir:
+## Запуска проекта FunBoxQTElixir:
 
   * Перейдите в папку с проектом, например `cd ./funbox_qt_elixir`
   * Установите пакеты зависимостей `mix deps.get`

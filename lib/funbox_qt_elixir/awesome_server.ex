@@ -50,16 +50,6 @@ defmodule FunboxQtElixir.AwesomeServer do
     %{"status" => status, "categories" => categories, "resources" => [], "all_packs" => all_packs}
   end
 
-  # Обновить звезды и даты всех пакетов
-  defp castUpdateStatusLinks() do
-    GenServer.cast(__MODULE__, :update_status_links)
-  end
-
-  # Обновить звезды и даты одного нового пакета
-  # defp castUpdateStatusOneLink() do
-  #   GenServer.cast(__MODULE__, :update_status_one_link)
-  # end
-
   #######################
   # Server functions
   #######################
@@ -82,7 +72,7 @@ defmodule FunboxQtElixir.AwesomeServer do
     Storage.open_file(:categories, type: :set)
     Storage.open_file(:all_packs, type: :set)
     # загрузка и парсинг awesome-list
-    castUpdateStatusLinks()
+    GenServer.cast(__MODULE__, :update_status_links)
     init_state = %{"status" => "inited"}
     {:ok, init_state}
   end
@@ -110,43 +100,6 @@ defmodule FunboxQtElixir.AwesomeServer do
       else
         state
       end
-
-    # state =
-    #   if status == "loaded" do
-    #     Logger.info("The update has begun ...")
-    #     result_update = FunboxQtElixir.Awesome.questionGitHubData(map_result)
-    #     Storage.delete_all_objects(:categories)
-    #     Storage.delete_all_objects(:all_packs)
-    #     Storage.open_file(:categories, type: :set)
-    #     Storage.open_file(:all_packs, type: :set)
-
-    #     %{
-    #       "status" => status,
-    #       "categories" => categories,
-    #       "resources" => _resources,
-    #       "all_packs" => all_packs
-    #     } = result_update
-
-    #     qry =
-    #       for category <- categories do
-    #         {category.title, category.link, category.description}
-    #       end
-
-    #     Storage.insert(:categories, qry)
-
-    #     qry =
-    #       for pack <- all_packs do
-    #         {pack.name, pack.link, pack.description, pack.heading, pack.stars, pack.lastupdate}
-    #       end
-
-    #     Storage.insert(:all_packs, qry)
-    #     Storage.insert(:state, {:status, status})
-    #     Logger.info("The update has finished!")
-    #     # state = 
-    #     %{"status" => status}
-    #   else
-    #     state
-    #   end
 
     scheduleWork1()
     scheduleWork2()
@@ -233,7 +186,7 @@ defmodule FunboxQtElixir.AwesomeServer do
   """
   def handle_info(:timercast1, state) do
     Logger.info("Daily update.")
-    castUpdateStatusLinks()
+    GenServer.cast(__MODULE__, :update_status_links)
     {:noreply, state}
   end
 

@@ -51,36 +51,20 @@ defmodule FunboxQtElixir.AwesomeTest do
     refute FunboxQtElixir.Awesome.divisionDescription?(description) == false
   end
 
-  test "Parse data from GitHub API" do
-    data = %{
-      "status" => "loaded",
-      "categories" => [],
-      "resources" => [],
-      "all_packs" => [
-        %{
-          :name => "fsm",
-          :link => "https://github.com/sasa1977/fsm",
-          :description => "Finite state machine as a functional data structure. ",
-          :heading => "Algorithms and Data structures",
-          :stars => 0,
-          :lastupdate => 0
-        }
-      ]
+  test "Question data from GitHub API" do
+    pack = %{
+      :name => "fsm",
+      :link => "https://github.com/sasa1977/fsm",
+      :description => "Finite state machine as a functional data structure. ",
+      :heading => "Algorithms and Data structures",
+      :stars => 0,
+      :lastupdate => 0
     }
 
-    result = FunboxQtElixir.Awesome.questionGitHubData(data)
+    result = FunboxQtElixir.Awesome.questionOneGitHubData(pack)
 
-    %{
-      "status" => status,
-      "categories" => _categories,
-      "resources" => _resources,
-      "all_packs" => all_packs
-    } = result
+    %{:stars => stars, :lastupdate => lu} = result
 
-    [%{:stars => stars, :lastupdate => lu}] = all_packs
-
-    assert status == "checked"
-    refute status == "loaded"
     assert is_integer(stars) == true
     assert is_integer(lu) == true
     refute is_integer(stars) == false

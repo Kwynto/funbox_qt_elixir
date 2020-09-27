@@ -7,6 +7,10 @@ defmodule FunboxQtElixir.Awesome do
 
   require Logger
 
+  # #######################
+  # Парсинг списка пакетов
+  # #######################
+
   @doc """
   	Точка входа.
   	Загрузка awesom-list в формате MD, парсинг в удобный внутренний формат 
@@ -253,6 +257,10 @@ defmodule FunboxQtElixir.Awesome do
     end
   end
 
+  # #############################
+  # Обновление состояний пакетов
+  # #############################
+
   @doc """
     Опрос GitHub API для получения у конкретного пакета количества звезд и даты последнего обновления
   """
@@ -347,119 +355,6 @@ defmodule FunboxQtElixir.Awesome do
       end
     rescue
       _e -> nil
-    end
-  end
-
-  @doc """
-  	Опрос GitHub API для получения количества звезд у пакетов и даты последнего обновления
-  """
-  def questionGitHubData(data) do
-    %{
-      "status" => status,
-      "categories" => categories,
-      "resources" => resources,
-      "all_packs" => all_packs
-    } = data
-
-    result_question = questionStatus(all_packs, {:res_state, status, []})
-    {:res_state, res_status, res_packs} = result_question
-    # Формируем полный стейт
-    %{
-      "status" => res_status,
-      "categories" => categories,
-      "resources" => resources,
-      "all_packs" => res_packs
-    }
-  end
-
-  # Клауз закрытия для опроса GitHub
-  defp questionStatus([], acc) do
-    {:res_state, _res_status, res_packs} = acc
-    {:res_state, "checked", res_packs}
-  end
-
-  # Основной рабочий клауз для опроса GitHub
-  defp questionStatus([head | tail], acc) do
-    try do
-      %{link: one_link, stars: one_stars, lastupdate: one_lu} = head
-
-      if one_stars == 0 and one_lu == 0 do
-        one_link_repos =
-          String.replace(
-            one_link,
-            "https://github.com/",
-            "https://fb-qt-elixir:Fmk9h0mda@api.github.com/repos/",
-            global: false
-          )
-
-        %HTTPoison.Response{body: lines} = HTTPoison.get!(one_link_repos)
-        {status, response_gha} = Jason.decode(lines)
-
-        acc2 =
-          if status == :ok do
-            {resp_updated, resp_stars, stat_active} =
-              case response_gha do
-                %{"commits_url" => resp_commits_url, "stargazers_count" => resp_stars} ->
-                  {getCommitUpdated(resp_commits_url), resp_stars, 1}
-
-                %{"documentation_url" => _doc_url_GH, "message" => _mes_gh, "url" => url_gh} ->
-                  one_link_repos =
-                    String.replace(
-                      url_gh,
-                      "https://api.github.com/",
-                      "https://fb-qt-elixir:Fmk9h0mda@api.github.com/",
-                      global: false
-                    )
-
-                  %HTTPoison.Response{body: lines} = HTTPoison.get!(one_link_repos)
-                  {_status, response_gha} = Jason.decode(lines)
-
-                  %{"commits_url" => resp_commits_url, "stargazers_count" => resp_stars} =
-                    response_gha
-
-                  {getCommitUpdated(resp_commits_url), resp_stars, 1}
-
-                %{"documentation_url" => _doc_url_gh, "message" => _mes_gh} ->
-                  {0, 0, 0}
-
-                _ ->
-                  {0, 0, 0}
-              end
-
-            if stat_active != 0 do
-              {:ok, resp_updated_dt, 0} = DateTime.from_iso8601(resp_updated)
-
-              days_passed =
-                div(
-                  DateTime.to_unix(DateTime.now!("Etc/UTC")) -
-                    DateTime.to_unix(resp_updated_dt),
-                  86400
-                )
-
-              Logger.info("Package information updated: #{inspect(one_link)}")
-              one_res = %{head | stars: resp_stars, lastupdate: days_passed}
-              {:res_state, res_status, res_packs} = acc
-              res_packs = res_packs ++ [one_res]
-              {:res_state, res_status, res_packs}
-            else
-              # Непроверяемый пакет идем дальше
-              acc
-            end
-          else
-            # Непроверяемый пакет идем дальше
-            acc
-          end
-
-        # Отработало подключение идем дальше по пакетам
-        questionStatus(tail, acc2)
-      else
-        {:res_state, res_status, res_packs} = acc
-        res_packs = res_packs ++ [head]
-        acc2 = {:res_state, res_status, res_packs}
-        questionStatus(tail, acc2)
-      end
-    rescue
-      _e -> questionStatus(tail, acc)
     end
   end
 
