@@ -50,6 +50,56 @@ defmodule FunboxQtElixir.AwesomeServer do
     %{"status" => status, "categories" => categories, "resources" => [], "all_packs" => all_packs}
   end
 
+  # def updateOnePack(pack) do
+  #   result = FunboxQtElixir.Awesome.questionOneGitHubData(pack)
+  #   GenServer.cast(__MODULE__, {:save_pack_in_state, result})
+  # end
+
+  def updatePacks(packs) do
+    result =
+      for pack <- packs do
+        FunboxQtElixir.Awesome.questionOneGitHubData(pack)
+      end
+
+    GenServer.cast(__MODULE__, {:save_packs, result})
+    # divList(packs, 10)
+  end
+
+  # Вход
+  def divList(packs, count) do
+    # формируем начальное состояние аккумуляторa
+    acc = for item <- 1..count, into: %{}, do: {item, []}
+
+    # начинаем разделение данных для паралельных потоков
+    divList(packs, count, acc, 1)
+  end
+
+  # Выход
+  def divList([], _count, acc, _next) do
+    IO.puts("---------------------------")
+    IO.inspect(acc)
+    IO.puts("---------------------------")
+    acc
+  end
+
+  # Переборка
+  def divList(packs, count, acc, next) do
+    # берем очередныой пакет
+    [head | tail] = packs
+    # получаем аккумулятор очередного потока
+    %{^next => work_arr} = acc
+    # добавляем пакет в аккумулятор потока
+    work_arr = [head | work_arr]
+    # обновляем полный аккумулятор
+    acc = %{acc | next => work_arr}
+
+    if next == count do
+      divList(tail, count, acc, 1)
+    else
+      divList(tail, count, acc, next + 1)
+    end
+  end
+
   #######################
   # Server functions
   #######################
@@ -80,95 +130,76 @@ defmodule FunboxQtElixir.AwesomeServer do
   @doc """
   	Парсинг списка и опрос GitHub на количество звезд и даты апдейта
   """
-  def handle_cast(:update_status_links, state) do
+  def handle_cast(:update_status_links, _state) do
+    scheduleWork1()
     map_result = FunboxQtElixir.Awesome.runParse()
     %{"status" => status, "categories" => categories, "all_packs" => all_packs} = map_result
 
-    # Подготовка стейта, для асинхронной проверки количества звезд и даты обновления
-    # tail_packs - "хвост" из непроверенных пакетов
-    # acc_packs  - "аккумулятор" из проверенных пакетов
-    state =
-      if status == "loaded" do
-        Logger.info("The update has begun ...")
+    GenServer.cast(__MODULE__, {:save_categories, categories})
 
-        %{
-          "status" => status,
-          "new_categories" => categories,
-          "tail_packs" => all_packs,
-          "acc_packs" => []
-        }
-      else
-        state
-      end
+    GenServer.cast(__MODULE__, {:update_all_packs, all_packs})
 
-    scheduleWork1()
-    scheduleWork2()
+    state = %{"status" => status}
     {:noreply, state}
   end
 
-  @doc """
-  	Опрос GitHub о состоянии одного пакета на количество звезд и даты апдейта
-  """
-  def handle_cast(:update_status_one_link, state) do
-    %{
-      "status" => status,
-      "new_categories" => categories,
-      "tail_packs" => tail_packs,
-      "acc_packs" => acc_packs
-    } = state
+  def handle_cast({:update_all_packs, packs}, state) do
+    div_packs = divList(packs, 10)
 
-    state =
-      case {tail_packs == [], status == "loaded"} do
-        {true, true} ->
-          # "хвост" пакетов пустой и состояние сервера после загрузки, значит все пакеты проверенны, сохраняем
-          Storage.delete_all_objects(:categories)
-          Storage.delete_all_objects(:all_packs)
-          Storage.open_file(:categories, type: :set)
-          Storage.open_file(:all_packs, type: :set)
-
-          qry =
-            for category <- categories do
-              {category.title, category.link, category.description}
-            end
-
-          Storage.insert(:categories, qry)
-
-          acc_packs = Enum.uniq(acc_packs)
-          acc_packs = Enum.reject(acc_packs, fn x -> x == nil end)
-
-          qry =
-            for pack <- acc_packs do
-              {pack.name, pack.link, pack.description, pack.heading, pack.stars, pack.lastupdate}
-            end
-
-          Storage.insert(:all_packs, qry)
-
-          status = "checked"
-          Storage.insert(:state, {:status, status})
-          Logger.info("The update has finished!")
-          %{"status" => status, "new_categories" => [], "tail_packs" => [], "acc_packs" => []}
-
-        {false, true} ->
-          # есть непроверенные пакеты, проверяем
-          [head | new_tail] = tail_packs
-          result = FunboxQtElixir.Awesome.questionOneGitHubData(head)
-          acc_packs = acc_packs ++ [result]
-
-          %{
-            "status" => status,
-            "new_categories" => categories,
-            "tail_packs" => new_tail,
-            "acc_packs" => acc_packs
-          }
-
-        _ ->
-          # {false, false} и возможно {true, false}
-          # нет надобности проверять состояние пакетов, просто возвращаем состояние как оно есть
-          state
-      end
+    for {_num, item} <- div_packs do
+      Task.start(__MODULE__, :updatePacks, [item])
+    end
 
     {:noreply, state}
   end
+
+  def handle_cast({:save_categories, categories}, state) do
+    Storage.delete_all_objects(:categories)
+
+    qry =
+      for category <- categories do
+        {category.title, category.link, category.description}
+      end
+
+    Storage.insert(:categories, qry)
+    {:noreply, state}
+  end
+
+  def handle_cast({:save_packs, packs}, state) do
+    # Storage.delete_all_objects(:all_packs)
+
+    packs =
+      packs
+      |> Enum.uniq()
+      |> Enum.reject(fn x -> x == nil end)
+
+    qry =
+      for pack <- packs do
+        {pack.name, pack.link, pack.description, pack.heading, pack.stars, pack.lastupdate}
+      end
+
+    Storage.insert(:all_packs, qry)
+
+    {:noreply, state}
+  end
+
+  # def handle_cast({:save_pack, pack}, state) do
+  #   Storage.insert(:all_packs, pack)
+  #   {:noreply, state}
+  # end
+
+  # def handle_cast({:save_pack_in_state, pack}, %{"acc_packs" => acc_packs} = state) do
+  #   acc_packs = acc_packs ++ [pack]
+  #   state = %{state | "acc_packs" => acc_packs}
+  #   {:noreply, state}
+  # end
+
+  # def handle_cast({:question_status_one_link, value}, %{"acc_packs" => acc_packs} = state) do
+  #   result = FunboxQtElixir.Awesome.questionOneGitHubData(value)
+  #   acc_packs = acc_packs ++ [result]
+  #   state = %{state | "acc_packs" => acc_packs}
+  #   {:noreply, state}
+  # end
 
   @doc """
   	Закрытие сервера
@@ -190,26 +221,11 @@ defmodule FunboxQtElixir.AwesomeServer do
     {:noreply, state}
   end
 
-  @doc """
-  	Вызов запроса на обработку новых пакетов, если они есть
-  """
-  def handle_info(:timercast2, state) do
-    # castUpdateStatusOneLink()
-    GenServer.cast(__MODULE__, :update_status_one_link)
-    scheduleWork2()
-    {:noreply, state}
-  end
-
   # Таймер на сутки
   defp scheduleWork1() do
     Process.send_after(self(), :timercast1, 86_400_000)
 
     # тестовое значение (90 минут)
     # Process.send_after(self(), :timercast1, 5_400_000)
-  end
-
-  # Таймер 1/10 секунды
-  defp scheduleWork2() do
-    Process.send_after(self(), :timercast2, 100)
   end
 end
