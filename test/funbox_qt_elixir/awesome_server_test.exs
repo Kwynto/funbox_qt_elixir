@@ -14,10 +14,9 @@ defmodule FunboxQtElixir.AwesomeServerTest do
   test "Geting all state" do
     FunboxQtElixir.AwesomeServer.start_link({:start})
     min_stars = 0
-    result = FunboxQtElixir.AwesomeServer.getAwesomeList(min_stars)
-    %{"status" => status, "categories" => categories, "all_packs" => all_packs} = result
+    result = FunboxQtElixir.AwesomeServer.get_awesome_list(min_stars)
+    %{"categories" => categories, "all_packs" => all_packs} = result
 
-    assert is_bitstring(status) == true
     assert is_list(categories) == true
     assert is_list(all_packs) == true
   end
@@ -25,10 +24,9 @@ defmodule FunboxQtElixir.AwesomeServerTest do
   test "Geting state with over 10 stars" do
     FunboxQtElixir.AwesomeServer.start_link({:start})
     min_stars = 10
-    result = FunboxQtElixir.AwesomeServer.getAwesomeList(min_stars)
-    %{"status" => status, "categories" => categories, "all_packs" => all_packs} = result
+    result = FunboxQtElixir.AwesomeServer.get_awesome_list(min_stars)
+    %{"categories" => categories, "all_packs" => all_packs} = result
 
-    assert is_bitstring(status) == true
     assert is_list(categories) == true
     assert is_list(all_packs) == true
   end
@@ -36,10 +34,9 @@ defmodule FunboxQtElixir.AwesomeServerTest do
   test "Geting state with over 50 stars" do
     FunboxQtElixir.AwesomeServer.start_link({:start})
     min_stars = 50
-    result = FunboxQtElixir.AwesomeServer.getAwesomeList(min_stars)
-    %{"status" => status, "categories" => categories, "all_packs" => all_packs} = result
+    result = FunboxQtElixir.AwesomeServer.get_awesome_list(min_stars)
+    %{"categories" => categories, "all_packs" => all_packs} = result
 
-    assert is_bitstring(status) == true
     assert is_list(categories) == true
     assert is_list(all_packs) == true
   end
@@ -47,10 +44,9 @@ defmodule FunboxQtElixir.AwesomeServerTest do
   test "Geting state with over 100 stars" do
     FunboxQtElixir.AwesomeServer.start_link({:start})
     min_stars = 100
-    result = FunboxQtElixir.AwesomeServer.getAwesomeList(min_stars)
-    %{"status" => status, "categories" => categories, "all_packs" => all_packs} = result
+    result = FunboxQtElixir.AwesomeServer.get_awesome_list(min_stars)
+    %{"categories" => categories, "all_packs" => all_packs} = result
 
-    assert is_bitstring(status) == true
     assert is_list(categories) == true
     assert is_list(all_packs) == true
   end
@@ -58,10 +54,9 @@ defmodule FunboxQtElixir.AwesomeServerTest do
   test "Geting state with over 500 stars" do
     FunboxQtElixir.AwesomeServer.start_link({:start})
     min_stars = 500
-    result = FunboxQtElixir.AwesomeServer.getAwesomeList(min_stars)
-    %{"status" => status, "categories" => categories, "all_packs" => all_packs} = result
+    result = FunboxQtElixir.AwesomeServer.get_awesome_list(min_stars)
+    %{"categories" => categories, "all_packs" => all_packs} = result
 
-    assert is_bitstring(status) == true
     assert is_list(categories) == true
     assert is_list(all_packs) == true
   end
@@ -69,10 +64,9 @@ defmodule FunboxQtElixir.AwesomeServerTest do
   test "Geting state with over 1000 stars" do
     FunboxQtElixir.AwesomeServer.start_link({:start})
     min_stars = 1000
-    result = FunboxQtElixir.AwesomeServer.getAwesomeList(min_stars)
-    %{"status" => status, "categories" => categories, "all_packs" => all_packs} = result
+    result = FunboxQtElixir.AwesomeServer.get_awesome_list(min_stars)
+    %{"categories" => categories, "all_packs" => all_packs} = result
 
-    assert is_bitstring(status) == true
     assert is_list(categories) == true
     assert is_list(all_packs) == true
   end

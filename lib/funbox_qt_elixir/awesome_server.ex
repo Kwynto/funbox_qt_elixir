@@ -60,10 +60,8 @@ defmodule FunboxQtElixir.AwesomeServer do
     %{"categories" => categories, "all_packs" => all_packs}
   end
 
-  @doc """
-    Функция обслуживания обновления данных в потоке и сохранение данных в DETS
-  """
-  def update_packs(packs, flow_num) do
+  # Функция обслуживания обновления данных в потоке и сохранение данных в DETS
+  defp update_packs(packs, flow_num) do
     Logger.info("Flow № #{flow_num} started.")
 
     # синхронное последовательное обновление данных о пакетах в отдельном потоке
