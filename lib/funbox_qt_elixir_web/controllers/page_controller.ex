@@ -13,24 +13,11 @@ defmodule FunboxQtElixirWeb.PageController do
         _e -> 0
       end
 
-    full_data =
+    %{"categories" => categories, "all_packs" => all_packs} =
       try do
-        State.getAwesomeList(min_stars)
+        State.get_awesome_list(min_stars)
       rescue
-        _e -> %{"status" => "inited", "categories" => [], "all_packs" => []}
-      end
-
-    %{"status" => status, "categories" => categories, "all_packs" => all_packs} = full_data
-
-    conn =
-      if status == "inited" or status == "loaded" do
-        conn
-        |> put_flash(
-          :info,
-          "Package data is being updated. Actual data will be available in 15-20 minutes."
-        )
-      else
-        conn
+        _e -> %{"categories" => [], "all_packs" => []}
       end
 
     render(conn, "index.html", categories: categories, all_packs: all_packs)
