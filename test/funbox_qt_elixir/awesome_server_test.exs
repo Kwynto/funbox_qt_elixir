@@ -70,4 +70,23 @@ defmodule FunboxQtElixir.AwesomeServerTest do
     assert is_list(categories) == true
     assert is_list(all_packs) == true
   end
+
+  test "Updating packages 1" do
+    assert FunboxQtElixir.AwesomeServer.update_packs([], 1) == :ok
+  end
+
+  test "Updating packages 2" do
+    packs = [
+      %{
+        :name => "fsm",
+        :link => "https://github.com/sasa1977/fsm",
+        :description => "Finite state machine as a functional data structure. ",
+        :heading => "Algorithms and Data structures",
+        :stars => 0,
+        :lastupdate => 0
+      }
+    ]
+
+    assert FunboxQtElixir.AwesomeServer.update_packs(packs, 1) == :ok
+  end
 end

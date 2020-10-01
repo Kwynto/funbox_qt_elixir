@@ -20,7 +20,7 @@ defmodule FunboxQtElixir.AwesomeParse do
 
   @doc """
     Точка входа.
-    Загрузка awesom-list в формате MD, парсинг в удобный внутренний формат.
+    Загрузка awesom-list в формате MD и парсинг в удобный внутренний формат.
   """
   def run_parse() do
     # скачиваем список пакетов
@@ -36,21 +36,30 @@ defmodule FunboxQtElixir.AwesomeParse do
     Входящие данный: скачанные или загруженные из файла данные.
     Исходящеи данный: ассоциативный массив %{"categories" => categories, "resources" => resources, "all_packs" => all_packs}
       каждое поле является списком,
-      categories - список строк с названиями категорий,
-      resources - список строк с названиями ресурсов,
+      categories - список с категориями, каждая категория в формате %{:title => title, :link => link, :description => ""},
+      resources - список с ресурсами, каждый ресурс в формате  %{:title => title, :link => link, :description => ""},
       all_packs - список пакетов из awesom-list = список ассоциативных массивов (maps),
-        где каждая мапа описывает конкретный пакет в формате %{"name" => name, "link" => link, "description" => description, "heading" => heading, "stars" => 0, lastupdate => 0}
+        где каждая мапа описывает конкретный пакет в формате
+         %{
+          :name => name,
+          :link => link,
+          :description => description,
+          :heading => heading,
+          :stars => 0,
+          :lastupdate => 0
+          }
           где: 
             name - (string) имя пакета,
             link - (string) ссылка,
             description - (string) описание пакета, 
             heading - (string) к какому заголовку относится (соответствует названию в categories или в resources),
-            stars - (integer) количество звезд на GitHub (default = 0) (ещё нужно парсить GitHub на звезды),
-            lastupdate - (integer) количество дней с последнего обновленя (default = 0) (ещё нужно парсить GitHub).
+            stars - (integer) количество звезд на GitHub (default = 0),
+            lastupdate - (integer) количество дней с последнего обновленя (default = 0)
   """
   def parse_awesome_list(lines) do
     # Делим и парсим на блоки
     {blocks, _links, _options} = EarmarkParser.Parser.parse(String.split(lines, ~r{\r\n?|\n}))
+
     # Убеждаемся что есть заголовок и отбрасываем его
     [%EarmarkParser.Block.Heading{} | blocks] = blocks
 
@@ -59,9 +68,10 @@ defmodule FunboxQtElixir.AwesomeParse do
     [_like | blocks] = blocks
     [_other | blocks] = blocks
 
-    # Получаем список с содержимым (заголовки) и остаток содержимого для оснвогого тела
+    # Получаем список с содержанием и остаток содержимого для оснвогого тела
     [%EarmarkParser.Block.List{blocks: table_of_content} | blocks_list] = blocks
-    # Парсим заголовки на категории
+
+    # Выделяем категории
     [
       %EarmarkParser.Block.ListItem{blocks: [%EarmarkParser.Block.Text{} | categories]}
       | table_of_content
@@ -69,6 +79,7 @@ defmodule FunboxQtElixir.AwesomeParse do
 
     [%EarmarkParser.Block.List{blocks: categories}] = categories
 
+    # Парсим содержание на категории
     categories =
       for %EarmarkParser.Block.ListItem{blocks: [%EarmarkParser.Block.Text{line: [name]}]} <-
             categories do
@@ -77,7 +88,7 @@ defmodule FunboxQtElixir.AwesomeParse do
         %{:title => title, :link => link, :description => ""}
       end
 
-    # Парсим остаток загловков для блока ресурсов
+    # Выделяем блок ресурсов
     [
       %EarmarkParser.Block.ListItem{blocks: [%EarmarkParser.Block.Text{} | resources]}
       | _table_of_content
@@ -85,6 +96,7 @@ defmodule FunboxQtElixir.AwesomeParse do
 
     [%EarmarkParser.Block.List{blocks: resources}] = resources
 
+    # Парсим остаток загловков для блока ресурсов
     resources =
       for %EarmarkParser.Block.ListItem{blocks: [%EarmarkParser.Block.Text{line: [name]}]} <-
             resources do
@@ -93,10 +105,14 @@ defmodule FunboxQtElixir.AwesomeParse do
         %{:title => title, :link => link, :description => ""}
       end
 
-    # Парсим основной контент как список кортежей с категориями
+    # Парсим основной контент
     # и дополнительно вытягиваем описания категорий
+    # для получения двух значений за один проход используем кортеж на выходе
     {:combopack, all_packs, categories} = iterate_content(blocks_list, [], categories)
 
+    # пересобираем пакеты так, чтобы небыло следов от многоуровневых вложений, если они были
+    # в unblocking_content
+    # и делаем реверс списка
     all_packs =
       all_packs
       |> unblocking_content([])

@@ -5,7 +5,7 @@ defmodule FunboxQtElixir.AwesomeServer do
   use GenServer
 
   require Logger
-  alias :dets, as: Storage, warn: false
+  alias :dets, as: Storage
 
   #######################
   # Client's functions
@@ -38,7 +38,7 @@ defmodule FunboxQtElixir.AwesomeServer do
         }
       end
 
-    # Сортируем пакеты в алфавитном порядке
+    # Сортируем пакеты по имени в алфавитном порядке
     all_packs = Enum.sort_by(all_packs, & &1.name, :asc)
 
     # Получаем список категорий из DETS
@@ -50,7 +50,7 @@ defmodule FunboxQtElixir.AwesomeServer do
         %{:title => title, :link => link, :description => description}
       end
 
-    # Сортируем категории в алфавитном порядке
+    # Сортируем категории по названию в алфавитном порядке
     categories = Enum.sort_by(categories, & &1.title, :asc)
 
     # Делаем выборку только тех категорий, которые подходят к выбраным пакетам
@@ -60,11 +60,13 @@ defmodule FunboxQtElixir.AwesomeServer do
     %{"categories" => categories, "all_packs" => all_packs}
   end
 
-  # Функция обслуживания обновления данных в потоке и сохранение данных в DETS
-  defp update_packs(packs, flow_num) do
+  @doc """
+    Функция обновления данных о пакетах и сохранение данных в DETS (запускается в паралельном процессе)
+  """
+  def update_packs(packs, flow_num) do
     Logger.info("Flow № #{flow_num} started.")
 
-    # синхронное последовательное обновление данных о пакетах в отдельном потоке
+    # синхронное последовательное обновление данных о пакетах
     result =
       for pack <- packs do
         FunboxQtElixir.AwesomeProbing.enquiry_github_data(pack, flow_num)
@@ -91,11 +93,11 @@ defmodule FunboxQtElixir.AwesomeServer do
   def init(init_state) do
     Logger.info("AwesomeServer started.")
 
-    # стартовые состояния
+    # открываем дисковые таблицы или создаем новые для хранения данных
     Storage.open_file(:categories, type: :set)
     Storage.open_file(:all_packs, type: :set)
 
-    # загрузка и парсинг awesome-list
+    # Запускаем загрузку и парсинг awesome-list
     GenServer.cast(__MODULE__, :update_awesome_list)
 
     {:ok, init_state}
@@ -105,25 +107,33 @@ defmodule FunboxQtElixir.AwesomeServer do
     Парсинг списка и опрос GitHub на количество звезд и даты апдейта
   """
   def handle_cast(:update_awesome_list, state) do
+    # уставнавливаем таймер на сутки
     schedule_work1()
+    # запрашиваем загрузку и парсинг
     map_result = FunboxQtElixir.AwesomeParse.run_parse()
+    # разделяем результат на категории и список пакетов
     %{"categories" => categories, "all_packs" => all_packs} = map_result
-
+    # сохраняем категории
     GenServer.cast(__MODULE__, {:save_categories, categories})
-
+    # запрашиваем обновление данных обо всех пакетах
     GenServer.cast(__MODULE__, {:update_all_packs, all_packs})
 
     {:noreply, state}
   end
 
+  @doc """
+    Обновление данных обо всех пакетах
+  """
   def handle_cast({:update_all_packs, packs}, state) do
     # Получаем количество потоков из конфигурации
-    count_flow = :funbox_qt_elixir |> Application.get_env(:count_flow)
+    count_flow = Application.get_env(:funbox_qt_elixir, :count_flow)
 
     # разделение списка всех пакетов на списки для потоков
     div_packs = FunboxQtElixir.AwesomeProbing.div_list(packs, count_flow)
 
-    # запуск асинхронного потокового обновления информации о пакетах
+    # запуск паралельных процессов для обновления информации о пакетах
+    # num - номер потока
+    # item - список пакетов для потока
     for {num, item} <- div_packs do
       # Запуск update_packs/2 в отдельном процессе
       Task.start(__MODULE__, :update_packs, [item, num])
@@ -132,13 +142,17 @@ defmodule FunboxQtElixir.AwesomeServer do
     {:noreply, state}
   end
 
+  @doc """
+    Сохранение категорий в DETS
+  """
   def handle_cast({:save_categories, categories}, state) do
     # Удаление старых категорий
     Storage.delete_all_objects(:categories)
 
-    # Подготовка запроса для массового сохранения данных в DETS
+    # Подготовка запроса для массового сохранения данных в DETS (список кортежей)
     qry =
       for category <- categories do
+        # формируем кортеж
         {category.title, category.link, category.description}
       end
 
@@ -147,6 +161,9 @@ defmodule FunboxQtElixir.AwesomeServer do
     {:noreply, state}
   end
 
+  @doc """
+    Сохранение данных о пакетах в DETS
+  """
   def handle_cast({:save_packs, packs}, state) do
     # Подготовка списка пакетов (удаление дублей и остатков от непроверенных пакетов)
     packs =
@@ -154,13 +171,14 @@ defmodule FunboxQtElixir.AwesomeServer do
       |> Enum.uniq()
       |> Enum.reject(fn x -> x == nil end)
 
-    # Подготовка запроса для массового сохранения данных в DETS
+    # Подготовка запроса для массового сохранения данных в DETS (список кортежей)
     qry =
       for pack <- packs do
+        # формируем кортеж
         {pack.name, pack.link, pack.description, pack.heading, pack.stars, pack.lastupdate}
       end
 
-    # Обновление данных о пакетах в хранилище
+    # Обновление (или запись новых) данных о пакетах в хранилище
     Storage.insert(:all_packs, qry)
 
     {:noreply, state}
@@ -180,6 +198,7 @@ defmodule FunboxQtElixir.AwesomeServer do
   """
   def handle_info(:timercast1, state) do
     Logger.info("Daily update.")
+    # Запрос на обновление списка пакетов
     GenServer.cast(__MODULE__, :update_awesome_list)
     {:noreply, state}
   end
@@ -187,8 +206,5 @@ defmodule FunboxQtElixir.AwesomeServer do
   # Таймер на сутки
   defp schedule_work1() do
     Process.send_after(self(), :timercast1, 86_400_000)
-
-    # тестовое значение (30 минут)
-    # Process.send_after(self(), :timercast1, 1_800_000)
   end
 end

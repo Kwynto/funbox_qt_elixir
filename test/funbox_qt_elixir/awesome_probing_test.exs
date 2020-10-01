@@ -63,14 +63,14 @@ defmodule FunboxQtElixir.AwesomeProbingTest do
   test "Splitting the package list into streams" do
     # получаем все пакеты
     map_result = FunboxQtElixir.AwesomeParse.run_parse()
-    %{"categories" => categories, "all_packs" => all_packs} = map_result
+    %{"all_packs" => all_packs} = map_result
 
     # Получаем количество потоков из конфигурации
-    count_flow = :funbox_qt_elixir |> Application.get_env(:count_flow)
+    count_flow = Application.get_env(:funbox_qt_elixir, :count_flow)
 
     # разделение списка всех пакетов на списки для потоков
-    div_packs = FunboxQtElixir.AwesomeProbing.div_list(packs, count_flow)
-    %{1: list1} = div_packs
+    div_packs = FunboxQtElixir.AwesomeProbing.div_list(all_packs, count_flow)
+    %{1 => list1} = div_packs
 
     assert is_map(div_packs) == true
     assert is_list(list1) == true

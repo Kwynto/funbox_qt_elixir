@@ -10,27 +10,28 @@ defmodule FunboxQtElixir.AwesomeProbing do
   """
   def enquiry_github_data(pack, flow_num) do
     try do
-      %{link: one_link, stars: one_stars, lastupdate: one_lu} = pack
+      # получаем текущие данные из описания пакета
+      %{link: link, stars: stars, lastupdate: lastupdate} = pack
 
-      if one_stars == 0 and one_lu == 0 do
+      if stars == 0 and lastupdate == 0 do
         # получаем из конфигурации данные для авторизации на GitHub API
-        login = :funbox_qt_elixir |> Application.get_env(:login_gha)
-        token = :funbox_qt_elixir |> Application.get_env(:token_gha)
+        auth = Application.get_env(:funbox_qt_elixir, :auth_gha)
 
-        # формируем запрос к GitHub
+        # формируем запрос к GitHub API из ссылки пакета
         link_repos =
           String.replace(
-            one_link,
+            link,
             "https://github.com/",
-            "https://" <> login <> ":" <> token <> "@api.github.com/repos/",
+            "https://" <> auth <> "@api.github.com/repos/",
             global: false
           )
 
+        # делаем запрос и декодируем JSON
         %HTTPoison.Response{body: lines} = HTTPoison.get!(link_repos)
         {status, response_gha} = Jason.decode(lines)
 
+        # GitHub ответил, обрабатываем результат
         if status == :ok do
-          # GitHub ответил, обрабатываем результат
           {resp_updated, resp_stars, stat_active} =
             case response_gha do
               %{"commits_url" => resp_commits_url, "stargazers_count" => resp_stars} ->
@@ -45,7 +46,7 @@ defmodule FunboxQtElixir.AwesomeProbing do
                   String.replace(
                     url_gh,
                     "https://api.github.com/",
-                    "https://" <> login <> ":" <> token <> "@api.github.com/",
+                    "https://" <> auth <> "@api.github.com/",
                     global: false
                   )
 
@@ -73,7 +74,7 @@ defmodule FunboxQtElixir.AwesomeProbing do
           # если проверка прошла успешно (stat_active последний элемент кортежа результата проверки),
           # то формируем ответ
           if stat_active != 0 do
-            # получаем текущую дату и время
+            # конвертируем полученную дату и время в DateTime
             {:ok, resp_updated_dt, 0} = DateTime.from_iso8601(resp_updated)
 
             # вычисляем количество дней, прошедших с последнего обновленя
@@ -84,7 +85,7 @@ defmodule FunboxQtElixir.AwesomeProbing do
                 86400
               )
 
-            Logger.info("[Flow № #{flow_num}] Package information updated: #{inspect(one_link)}")
+            Logger.info("[Flow № #{flow_num}] Package information updated: #{inspect(link)}")
 
             # обновляем мапу и возвращаем ее в качестве результата всей проверки
             %{pack | stars: resp_stars, lastupdate: days_passed}
@@ -110,16 +111,9 @@ defmodule FunboxQtElixir.AwesomeProbing do
   defp get_commit_updated(url) do
     try do
       # получаем из конфигурации данные для авторизации на GitHub API
-      login = :funbox_qt_elixir |> Application.get_env(:login_gha)
-      token = :funbox_qt_elixir |> Application.get_env(:token_gha)
+      auth = Application.get_env(:funbox_qt_elixir, :auth_gha)
 
-      link_repos =
-        String.replace(
-          url,
-          "https://",
-          "https://" <> login <> ":" <> token <> "@",
-          global: false
-        )
+      link_repos = String.replace(url, "https://", "https://" <> auth <> "@", global: false)
 
       link_commits = String.replace(link_repos, "{/sha}", "")
       %HTTPoison.Response{body: lines} = HTTPoison.get!(link_commits)
@@ -188,9 +182,13 @@ defmodule FunboxQtElixir.AwesomeProbing do
     # обновляем полный аккумулятор
     acc = %{acc | next => work_arr}
 
+    # Переходим к аккумулятору следующего потока
     if next == count do
+      # если счетчик достиг максимума, то переходим к первому аккумулятору
       div_list(tail, count, acc, 1)
     else
+      # счетчик ещё не максимальный, 
+      # увеличиваем на единицу для перехода к следующему аккумулятору
       div_list(tail, count, acc, next + 1)
     end
   end

@@ -28,13 +28,10 @@ config :funbox_qt_elixir, :children, [
 ]
 
 # Количество потоков для обновления данных
-config :funbox_qt_elixir, :count_flow, 10
+config :funbox_qt_elixir, :count_flow, 25
 
-# Логин для доступа к GitHub API
-config :funbox_qt_elixir, :login_gha, "fb-qt-elixir"
-
-# Токен для доступа к GitHub API (токен удаляется через 1 год после последнего использования)
-config :funbox_qt_elixir, :token_gha, "5a0c0820016e104363923dac3dbb2a49cd1cd639"
+# Логин и токен для авторизации в GitHub API
+config :funbox_qt_elixir, :auth_gha, "fb-qt-elixir:5a0c0820016e104363923dac3dbb2a49cd1cd639"
 
 # ## SSL Support
 #

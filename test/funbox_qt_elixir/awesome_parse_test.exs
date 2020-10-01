@@ -3,8 +3,16 @@ defmodule FunboxQtElixir.AwesomeParseTest do
 
   test "Loading awesome-list" do
     result = FunboxQtElixir.AwesomeParse.run_parse()
-    %{"status" => status} = result
-    assert status == "loaded"
+
+    %{
+      "categories" => categories,
+      "resources" => resources,
+      "all_packs" => all_packs
+    } = result
+
+    assert is_list(categories) == true
+    assert is_list(resources) == true
+    assert is_list(all_packs) == true
   end
 
   test "Parse awesome-list" do
@@ -12,8 +20,16 @@ defmodule FunboxQtElixir.AwesomeParseTest do
       HTTPoison.get!("https://raw.githubusercontent.com/h4cc/awesome-elixir/master/README.md")
 
     result = FunboxQtElixir.AwesomeParse.parse_awesome_list(lines)
-    %{"status" => status} = result
-    assert status == "loaded"
+
+    %{
+      "categories" => categories,
+      "resources" => resources,
+      "all_packs" => all_packs
+    } = result
+
+    assert is_list(categories) == true
+    assert is_list(resources) == true
+    assert is_list(all_packs) == true
   end
 
   test "Parse description without links" do
