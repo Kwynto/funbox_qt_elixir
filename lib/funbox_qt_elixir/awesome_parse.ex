@@ -8,10 +8,11 @@ defmodule FunboxQtElixir.AwesomeParse do
   # Регулярные выражения
   # #####################
 
-  # регулярное выражение для парсинга пакета
+  # регулярное выражение для парсинга пакета, используется в parse_line/1
   @line_regex ~r/^\[([^]]+)\]\(([^)]+)\) - (.+)([\.\!]+)$/
 
-  # регулярное выражение для описания пакета
+  # регулярное выражение для описания пакета, 
+  # используется в division_description?/1 и division_description/1
   @description_regex ~r/^(.+)\[([^]]+)\]\(([^)]+)\)(.+)$/
 
   # #################
@@ -22,6 +23,7 @@ defmodule FunboxQtElixir.AwesomeParse do
     Точка входа.
     Загрузка awesom-list в формате MD и парсинг в удобный внутренний формат.
   """
+  @spec run_parse() :: %{:categories => list, :resources => list, :all_packs => list}
   def run_parse() do
     # скачиваем список пакетов
     %HTTPoison.Response{body: lines} =
@@ -56,8 +58,13 @@ defmodule FunboxQtElixir.AwesomeParse do
             stars - (integer) количество звезд на GitHub (default = 0),
             lastupdate - (integer) количество дней с последнего обновленя (default = 0)
   """
+  @spec parse_awesome_list(String.t()) :: %{
+          :categories => list,
+          :resources => list,
+          :all_packs => list
+        }
   def parse_awesome_list(lines) do
-    # Делим и парсим на блоки
+    # Делим на блоки
     {blocks, _links, _options} = EarmarkParser.Parser.parse(String.split(lines, ~r{\r\n?|\n}))
 
     # Убеждаемся что есть заголовок и отбрасываем его
@@ -106,13 +113,12 @@ defmodule FunboxQtElixir.AwesomeParse do
       end
 
     # Парсим основной контент
-    # и дополнительно вытягиваем описания категорий
-    # для получения двух значений за один проход используем кортеж на выходе
+    # и дополнительно вытягиваем описания категорий.
+    # Для получения двух значений за один проход используем кортеж на выходе
     {:combopack, all_packs, categories} = iterate_content(blocks_list, [], categories)
 
-    # пересобираем пакеты так, чтобы небыло следов от многоуровневых вложений, если они были
-    # в unblocking_content
-    # и делаем реверс списка
+    # пересобираем пакеты через unblocking_content так, чтобы небыло следов 
+    # от многоуровневых вложений, если они были и делаем реверс списка
     all_packs =
       all_packs
       |> unblocking_content([])
@@ -126,7 +132,8 @@ defmodule FunboxQtElixir.AwesomeParse do
     }
   end
 
-  # Разделение отдельных хэш-тегов заголовка на имя и ссылку
+  # Разделение тегов заголовка вида [title](link) на имя и ссылку
+  @spec parse_markdown_link(String.t()) :: {String.t(), String.t()}
   defp parse_markdown_link(string) do
     [^string, title, link] = Regex.run(~r/\[(.+)\]\((.+)\)/, string)
     {title, link}
@@ -134,6 +141,7 @@ defmodule FunboxQtElixir.AwesomeParse do
 
   # Удаляем внтренние массивы, отавшиеся от старой структуры из MD
   # Клауза выхода, БЕЗ реверса
+  @spec unblocking_content(list, list) :: list
   defp unblocking_content([], acc) do
     acc
   end
@@ -153,7 +161,9 @@ defmodule FunboxQtElixir.AwesomeParse do
   end
 
   # Переборка основного тела со списком пакетов
+  # ---
   # Клауза для выхода из функции и реверс результата
+  @spec iterate_content(list, list, list) :: {:combopack, list, list}
   defp iterate_content([], acc, categories) do
     {:combopack, Enum.reverse(acc), categories}
   end
@@ -196,6 +206,7 @@ defmodule FunboxQtElixir.AwesomeParse do
   end
 
   # Переборка всех данных описания конкретного пакета
+  @spec check_list(list, String.t()) :: list
   defp check_list(list, heading) do
     for list_item <- list do
       line =

@@ -15,6 +15,7 @@ defmodule FunboxQtElixir.AwesomeServer do
     Получение пакетов и категорий по количеству звезд
     (для контоллера)
   """
+  @spec get_awesome_list(integer) :: %{:categories => list, :all_packs => list}
   def get_awesome_list(min_stars) do
     # Получаем список пакетов из DETS, у которых stars >= min_stars
     all_packs =
@@ -61,12 +62,13 @@ defmodule FunboxQtElixir.AwesomeServer do
   end
 
   @doc """
-    Функция обновления данных о пакетах и сохранение данных в DETS (запускается в паралельном процессе)
+    Функция обновления данных о наборе пакетов и сохранение данных в DETS (запускается в паралельном процессе)
   """
-  def update_packs(packs, flow_num) do
+  @spec update_packs(integer, list) :: :ok
+  def update_packs(flow_num, packs) do
     Logger.info("Flow № #{flow_num} started.")
 
-    # синхронное последовательное обновление данных о пакетах
+    # последовательное обновление блока данных о пакетах
     result =
       for pack <- packs do
         FunboxQtElixir.AwesomeProbing.enquiry_github_data(pack, flow_num)
@@ -83,6 +85,7 @@ defmodule FunboxQtElixir.AwesomeServer do
   @doc """
     Start function for supervisor
   """
+  @spec start_link(any) :: :ok
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
@@ -90,6 +93,7 @@ defmodule FunboxQtElixir.AwesomeServer do
   @doc """
     Initialization function
   """
+  @spec start_link(map) :: {:ok, map}
   def init(init_state) do
     Logger.info("AwesomeServer started.")
 
@@ -104,7 +108,7 @@ defmodule FunboxQtElixir.AwesomeServer do
   end
 
   @doc """
-    Парсинг списка и опрос GitHub на количество звезд и даты апдейта
+    Запрос на парсинга списка и на опрос GitHub на количество звезд и даты обновления
   """
   def handle_cast(:update_awesome_list, state) do
     # уставнавливаем таймер на сутки
@@ -136,7 +140,7 @@ defmodule FunboxQtElixir.AwesomeServer do
     # item - список пакетов для потока
     for {num, item} <- div_packs do
       # Запуск update_packs/2 в отдельном процессе
-      Task.start(__MODULE__, :update_packs, [item, num])
+      Task.start(__MODULE__, :update_packs, [num, item])
     end
 
     {:noreply, state}

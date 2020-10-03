@@ -1,4 +1,4 @@
-# FunBoxQTElixir - Выполненное квалификационное задание на должность Elixir-разработчик в FunBox
+# FunBoxQTElixir - Выполненное квалификационное задание на вакансию Elixir-разработчик в FunBox
 
 ## Запуска проекта FunBoxQTElixir:
 
@@ -13,7 +13,7 @@
   * Состояние хранится в DETS (состояние между запусками сохраняется) при каждом запуске сервера и через каждые сутки после запуска производится опрос GitHub
   * Все парсеры расположенны в модуле FunboxQtElixir.AwesomeParse
   * Все функции опроса GitHub API расположены в модуле FunboxQtElixir.AwesomeProbing
-  * Количество потоков для паралельного опроса GitHub задается в конфигурации через `config :funbox_qt_elixir, :count_flow, 25`
+  * Количество потоков для паралельного опроса GitHub задается в конфигурации через `config :funbox_qt_elixir, :count_flow, 15`
   * Авторизация GitHub API задается в конфигурации через `config :funbox_qt_elixir, :auth_gha, ...`
   * Используется единственный контроллер FunboxQtElixirWeb.PageController
   * В проекте использованы дополнительные пакеты :earmark > 1.4 и :httpoison > 0.11

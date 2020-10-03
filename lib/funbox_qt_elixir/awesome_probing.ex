@@ -7,10 +7,13 @@ defmodule FunboxQtElixir.AwesomeProbing do
 
   @doc """
     Опрос GitHub API для получения у конкретного пакета количества звезд и даты последнего обновления
+    Входящие данные: пакет и номер потока
+    Результат: обновленный пакет или nil
   """
-  def enquiry_github_data(pack, flow_num) do
+  @spec enquiry_github_data(map, integer) :: any
+  def enquiry_github_data(pack, flow_num \\ 0) do
     try do
-      # получаем текущие данные из описания пакета
+      # получаем текущие значимые данные из описания пакета
       %{link: link, stars: stars, lastupdate: lastupdate} = pack
 
       if stars == 0 and lastupdate == 0 do
@@ -107,7 +110,9 @@ defmodule FunboxQtElixir.AwesomeProbing do
     end
   end
 
-  # Получить дату последнего обновления последнего коммита
+  # Получить дату последнего обновления последнего коммита 
+  # в виде строки (то есть так как приходит с GitHub)
+  @spec get_commit_updated(String.t()) :: String.t()
   defp get_commit_updated(url) do
     try do
       # получаем из конфигурации данные для авторизации на GitHub API
@@ -132,10 +137,11 @@ defmodule FunboxQtElixir.AwesomeProbing do
   end
 
   @doc """
-    Проверка совпадений спаска категорий со списком найденных пакетов
+    Проверка совпадений списка категорий со списком найденных пакетов
     и возврат актуального списка categories.
     Используется для выборки из хранилища при отображении страницы, для парсинга и опроса НЕ используется.
   """
+  @spec check_for_matches(list, list) :: list
   def check_for_matches(categories, all_packs) do
     list_heading =
       for one_pack <- all_packs do
@@ -158,6 +164,7 @@ defmodule FunboxQtElixir.AwesomeProbing do
     packs - список всех пакетов
     count - количество потоков
   """
+  @spec div_list(list, integer) :: list
   def div_list(packs, count) do
     # формируем начальное состояние аккумулятора для разделения данных на потоки
     acc = for item <- 1..count, into: %{}, do: {item, []}
