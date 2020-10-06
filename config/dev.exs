@@ -66,7 +66,7 @@ config :funbox_qt_elixir, :count_flow, 15
 config :funbox_qt_elixir, :enquiry_gha, true
 
 # Логин и токен для авторизации в GitHub API
-config :funbox_qt_elixir, :auth_gha, "fb-qt-elixir:2d0984ff1d6ecdab12050428c1f1b745031f2ae7"
+config :funbox_qt_elixir, :auth_gha, "fb-qt-elixir:6d8fa5fa527e5b6af4638acf633c7943bf7ef80e"
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"

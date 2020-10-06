@@ -12,9 +12,6 @@ defmodule FunboxQtElixir.AwesomeProbing do
   """
   @spec enquiry_github_data_via_api(map, integer) :: any
   def enquiry_github_data_via_api(%{link: link} = pack, flow_num \\ 0) do
-    # получаем текущие значимые данные из описания пакета
-    # %{link: link} = pack
-
     try do
       if String.contains?(link, "github.com/") do
         # получаем из конфигурации данные для авторизации на GitHub API
@@ -151,9 +148,6 @@ defmodule FunboxQtElixir.AwesomeProbing do
     :timer.sleep(61_000)
 
     # приступаем к работе
-
-    # получаем текущие значимые данные из описания пакета
-    # %{link: link} = pack
 
     try do
       if String.contains?(link, "github.com/") do
