@@ -68,10 +68,20 @@ defmodule FunboxQtElixir.AwesomeServer do
   def update_packs(flow_num, packs) do
     Logger.info("Flow № #{flow_num} started.")
 
-    # последовательное обновление блока данных о пакетах
+    # Получаем из конфигурации метод опроса GitHub true = GitHub API, false = Floki
+    enquiry = Application.get_env(:funbox_qt_elixir, :enquiry_gha)
+
     result =
-      for pack <- packs do
-        FunboxQtElixir.AwesomeProbing.enquiry_github_data(pack, flow_num)
+      unless enquiry do
+        # последовательное обновление блока данных о пакетах через Floki
+        for pack <- packs do
+          FunboxQtElixir.AwesomeProbing.enquiry_github_data_via_floki(pack, flow_num)
+        end
+      else
+        # последовательное обновление блока данных о пакетах через GitHub API
+        for pack <- packs do
+          FunboxQtElixir.AwesomeProbing.enquiry_github_data_via_api(pack, flow_num)
+        end
       end
 
     GenServer.cast(__MODULE__, {:save_packs, result})

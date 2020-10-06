@@ -11,7 +11,7 @@ defmodule FunboxQtElixir.AwesomeProbingTest do
       :lastupdate => 0
     }
 
-    result = FunboxQtElixir.AwesomeProbing.enquiry_github_data(pack, 1)
+    result = FunboxQtElixir.AwesomeProbing.enquiry_github_data_via_api(pack, 1)
 
     %{:stars => stars, :lastupdate => lu} = result
 

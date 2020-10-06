@@ -43,7 +43,8 @@ defmodule FunboxQtElixir.MixProject do
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:earmark, "~> 1.4"},
-      {:httpoison, "~> 0.11"}
+      {:httpoison, "~> 0.11"},
+      {:floki, "~> 0.29.0"}
     ]
   end
 
