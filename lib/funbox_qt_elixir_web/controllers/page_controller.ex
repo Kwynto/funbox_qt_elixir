@@ -13,11 +13,11 @@ defmodule FunboxQtElixirWeb.PageController do
         _e -> 0
       end
 
-    %{"categories" => categories, "all_packs" => all_packs} =
+    %{categories: categories, all_packs: all_packs} =
       try do
         State.get_awesome_list(min_stars)
       rescue
-        _e -> %{"categories" => [], "all_packs" => []}
+        _e -> %{categories: [], all_packs: []}
       end
 
     render(conn, "index.html", categories: categories, all_packs: all_packs)

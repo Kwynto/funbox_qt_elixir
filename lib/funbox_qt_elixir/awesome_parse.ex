@@ -23,7 +23,7 @@ defmodule FunboxQtElixir.AwesomeParse do
     Точка входа.
     Загрузка awesom-list в формате MD и парсинг в удобный внутренний формат.
   """
-  @spec run_parse() :: %{:categories => list, :resources => list, :all_packs => list}
+  @spec run_parse() :: %{categories: list(), resources: list(), all_packs: list()}
   def run_parse() do
     # скачиваем список пакетов
     %HTTPoison.Response{body: lines} =
@@ -59,9 +59,9 @@ defmodule FunboxQtElixir.AwesomeParse do
             lastupdate - (integer) количество дней с последнего обновленя (default = 0)
   """
   @spec parse_awesome_list(String.t()) :: %{
-          :categories => list,
-          :resources => list,
-          :all_packs => list
+          categories: list(),
+          resources: list(),
+          all_packs: list()
         }
   def parse_awesome_list(lines) do
     # Делим на блоки
@@ -92,7 +92,7 @@ defmodule FunboxQtElixir.AwesomeParse do
             categories do
         {title, link} = parse_markdown_link(name)
         link = String.replace(link, "#", "")
-        %{:title => title, :link => link, :description => ""}
+        %{title: title, link: link, description: ""}
       end
 
     # Выделяем блок ресурсов
@@ -109,7 +109,7 @@ defmodule FunboxQtElixir.AwesomeParse do
             resources do
         {title, link} = parse_markdown_link(name)
         link = String.replace(link, "#", "")
-        %{:title => title, :link => link, :description => ""}
+        %{title: title, link: link, description: ""}
       end
 
     # Парсим основной контент
@@ -126,9 +126,9 @@ defmodule FunboxQtElixir.AwesomeParse do
 
     # Формируем полный ответ
     %{
-      "categories" => categories,
-      "resources" => resources,
-      "all_packs" => all_packs
+      categories: categories,
+      resources: resources,
+      all_packs: all_packs
     }
   end
 
@@ -141,7 +141,7 @@ defmodule FunboxQtElixir.AwesomeParse do
 
   # Удаляем внтренние массивы, отавшиеся от старой структуры из MD
   # Клауза выхода, БЕЗ реверса
-  @spec unblocking_content(list, list) :: list
+  @spec unblocking_content(list(), list()) :: list()
   defp unblocking_content([], acc) do
     acc
   end
@@ -163,7 +163,7 @@ defmodule FunboxQtElixir.AwesomeParse do
   # Переборка основного тела со списком пакетов
   # ---
   # Клауза для выхода из функции и реверс результата
-  @spec iterate_content(list, list, list) :: {:combopack, list, list}
+  @spec iterate_content(list(), list(), list()) :: {:combopack, list(), list()}
   defp iterate_content([], acc, categories) do
     {:combopack, Enum.reverse(acc), categories}
   end
@@ -206,7 +206,7 @@ defmodule FunboxQtElixir.AwesomeParse do
   end
 
   # Переборка всех данных описания конкретного пакета
-  @spec check_list(list, String.t()) :: list
+  @spec check_list(list(), String.t()) :: list()
   defp check_list(list, heading) do
     for list_item <- list do
       line =
@@ -239,12 +239,12 @@ defmodule FunboxQtElixir.AwesomeParse do
       [name, link, description | _rest] = parse_line(line)
 
       %{
-        :name => name,
-        :link => link,
-        :description => description,
-        :heading => heading,
-        :stars => 0,
-        :lastupdate => 0
+        name: name,
+        link: link,
+        description: description,
+        heading: heading,
+        stars: 0,
+        lastupdate: 0
       }
     end
   end

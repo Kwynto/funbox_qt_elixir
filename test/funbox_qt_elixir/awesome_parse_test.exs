@@ -5,9 +5,9 @@ defmodule FunboxQtElixir.AwesomeParseTest do
     result = FunboxQtElixir.AwesomeParse.run_parse()
 
     %{
-      "categories" => categories,
-      "resources" => resources,
-      "all_packs" => all_packs
+      categories: categories,
+      resources: resources,
+      all_packs: all_packs
     } = result
 
     assert is_list(categories) == true
@@ -22,9 +22,9 @@ defmodule FunboxQtElixir.AwesomeParseTest do
     result = FunboxQtElixir.AwesomeParse.parse_awesome_list(lines)
 
     %{
-      "categories" => categories,
-      "resources" => resources,
-      "all_packs" => all_packs
+      categories: categories,
+      resources: resources,
+      all_packs: all_packs
     } = result
 
     assert is_list(categories) == true

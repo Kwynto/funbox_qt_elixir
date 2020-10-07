@@ -10,7 +10,7 @@ defmodule FunboxQtElixir.AwesomeProbing do
     Входящие данные: пакет и номер потока
     Результат: обновленный пакет или nil
   """
-  @spec enquiry_github_data_via_api(map, integer) :: any
+  @spec enquiry_github_data_via_api(map(), integer()) :: any()
   def enquiry_github_data_via_api(%{link: link} = pack, flow_num \\ 0) do
     try do
       if String.contains?(link, "github.com/") do
@@ -141,7 +141,7 @@ defmodule FunboxQtElixir.AwesomeProbing do
     Результат: обновленный пакет или nil
     !!! Это альтернативный метод запросов к GitHub !!!
   """
-  @spec enquiry_github_data_via_floki(map, integer) :: any
+  @spec enquiry_github_data_via_floki(map(), integer()) :: any()
   def enquiry_github_data_via_floki(%{link: link} = pack, flow_num \\ 0) do
     # делаем задержку в выполнении (только для этого режима), 
     # так как при прямых запросах можно получить блокировку от GitHub
@@ -204,11 +204,11 @@ defmodule FunboxQtElixir.AwesomeProbing do
     и возврат актуального списка categories.
     Используется для выборки из хранилища при отображении страницы, для парсинга и опроса НЕ используется.
   """
-  @spec check_for_matches(list, list) :: list
+  @spec check_for_matches(list(), list()) :: list()
   def check_for_matches(categories, all_packs) do
     list_heading =
       for one_pack <- all_packs do
-        %{:heading => heading} = one_pack
+        %{heading: heading} = one_pack
         heading
       end
 
@@ -227,7 +227,7 @@ defmodule FunboxQtElixir.AwesomeProbing do
     packs - список всех пакетов
     count - количество потоков
   """
-  @spec div_list(list, integer) :: list
+  @spec div_list(list(), integer()) :: list()
   def div_list(packs, count) do
     # формируем начальное состояние аккумулятора для разделения данных на потоки
     acc = for item <- 1..count, into: %{}, do: {item, []}

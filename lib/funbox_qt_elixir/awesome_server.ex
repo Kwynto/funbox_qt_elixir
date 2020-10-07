@@ -15,7 +15,7 @@ defmodule FunboxQtElixir.AwesomeServer do
     Получение пакетов и категорий по количеству звезд
     (для контоллера)
   """
-  @spec get_awesome_list(integer) :: %{:categories => list, :all_packs => list}
+  @spec get_awesome_list(integer()) :: %{categories: list(), all_packs: list()}
   def get_awesome_list(min_stars) do
     # Получаем список пакетов из DETS, у которых stars >= min_stars
     all_packs =
@@ -30,12 +30,12 @@ defmodule FunboxQtElixir.AwesomeServer do
         {name, link, description, heading, stars, lastupdate} = item
 
         %{
-          :name => name,
-          :link => link,
-          :description => description,
-          :heading => heading,
-          :stars => stars,
-          :lastupdate => lastupdate
+          name: name,
+          link: link,
+          description: description,
+          heading: heading,
+          stars: stars,
+          lastupdate: lastupdate
         }
       end
 
@@ -48,7 +48,7 @@ defmodule FunboxQtElixir.AwesomeServer do
     categories =
       for item <- categories do
         {title, link, description} = item
-        %{:title => title, :link => link, :description => description}
+        %{title: title, link: link, description: description}
       end
 
     # Сортируем категории по названию в алфавитном порядке
@@ -58,13 +58,13 @@ defmodule FunboxQtElixir.AwesomeServer do
     categories = FunboxQtElixir.AwesomeProbing.check_for_matches(categories, all_packs)
 
     # отдаем категории и пакеты в контроллер
-    %{"categories" => categories, "all_packs" => all_packs}
+    %{categories: categories, all_packs: all_packs}
   end
 
   @doc """
     Функция обновления данных о наборе пакетов и сохранение данных в DETS (запускается в паралельном процессе)
   """
-  @spec update_packs(integer, list) :: :ok
+  @spec update_packs(integer(), list()) :: :ok
   def update_packs(flow_num, packs) do
     Logger.info("Flow № #{flow_num} started.")
 
@@ -95,7 +95,7 @@ defmodule FunboxQtElixir.AwesomeServer do
   @doc """
     Start function for supervisor
   """
-  @spec start_link(any) :: :ok
+  @spec start_link(any()) :: :ok
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
@@ -103,7 +103,7 @@ defmodule FunboxQtElixir.AwesomeServer do
   @doc """
     Initialization function
   """
-  @spec start_link(map) :: {:ok, map}
+  @spec start_link(map()) :: {:ok, map()}
   def init(init_state) do
     Logger.info("AwesomeServer started.")
 
@@ -126,7 +126,7 @@ defmodule FunboxQtElixir.AwesomeServer do
     # запрашиваем загрузку и парсинг
     map_result = FunboxQtElixir.AwesomeParse.run_parse()
     # разделяем результат на категории и список пакетов
-    %{"categories" => categories, "all_packs" => all_packs} = map_result
+    %{categories: categories, all_packs: all_packs} = map_result
     # сохраняем категории
     GenServer.cast(__MODULE__, {:save_categories, categories})
     # запрашиваем обновление данных обо всех пакетах

@@ -15,7 +15,7 @@ defmodule FunboxQtElixir.AwesomeServerTest do
     min_stars = 0
     FunboxQtElixir.AwesomeServer.start_link({:start})
     result = FunboxQtElixir.AwesomeServer.get_awesome_list(min_stars)
-    %{"categories" => categories, "all_packs" => all_packs} = result
+    %{categories: categories, all_packs: all_packs} = result
 
     assert is_list(categories) == true
     assert is_list(all_packs) == true
@@ -25,7 +25,7 @@ defmodule FunboxQtElixir.AwesomeServerTest do
     min_stars = 10
     FunboxQtElixir.AwesomeServer.start_link({:start})
     result = FunboxQtElixir.AwesomeServer.get_awesome_list(min_stars)
-    %{"categories" => categories, "all_packs" => all_packs} = result
+    %{categories: categories, all_packs: all_packs} = result
 
     assert is_list(categories) == true
     assert is_list(all_packs) == true
@@ -38,12 +38,12 @@ defmodule FunboxQtElixir.AwesomeServerTest do
   test "Updating packages 2" do
     packs = [
       %{
-        :name => "fsm",
-        :link => "https://github.com/sasa1977/fsm",
-        :description => "Finite state machine as a functional data structure. ",
-        :heading => "Algorithms and Data structures",
-        :stars => 0,
-        :lastupdate => 0
+        name: "fsm",
+        link: "https://github.com/sasa1977/fsm",
+        description: "Finite state machine as a functional data structure. ",
+        heading: "Algorithms and Data structures",
+        stars: 0,
+        lastupdate: 0
       }
     ]
 
